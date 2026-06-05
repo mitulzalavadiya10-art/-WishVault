@@ -1,0 +1,26 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "e92f08b4ba260e31e9cb7d76cd38ba2e"
+name = "S-app-m"
+application_url = "https://example.com"
+embedded = true
+handle = "wishvault-wishlist-alerts"
+
+[build]
+automatically_update_urls_on_dev = true
+dev_store_url = "s-app-store-m.myshopify.com"
+
+[webhooks]
+api_version = "2026-04"
+
+[auth]
+redirect_urls = [ ]
+
+[pos]
+embedded = false
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = ""
+optional_scopes = [ ]
+use_legacy_install_flow = false

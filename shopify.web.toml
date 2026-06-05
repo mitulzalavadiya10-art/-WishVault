@@ -1,0 +1,8 @@
+# shopify.web.toml (Frontend config)
+# This file tells the Shopify CLI how to run the frontend server.
+
+roles = ["frontend"]
+
+[commands]
+dev = "npm run dev:frontend"
+port = 5173

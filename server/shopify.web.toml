@@ -1,0 +1,8 @@
+# server/shopify.web.toml (Backend config)
+# This file tells the Shopify CLI how to run the backend server.
+
+roles = ["backend"]
+
+[commands]
+dev = "npm run dev:backend"
+port = 8081
