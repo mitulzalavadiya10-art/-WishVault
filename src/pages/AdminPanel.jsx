@@ -133,13 +133,34 @@ export default function AdminPanel() {
         buttonText: "Add to Wishlist",
         emailSubject: "An item in your wishlist has dropped in price!",
         emailGreeting: "Great news! We noticed a price drop on something you love.",
-        activePlan: "Free"
+        activePlan: "Free",
+        appEmbedActive: false
       })
     })
       .then(res => res.json())
       .then(data => {
         if (data.success) {
           setBannerMsg("App settings reset to standard Warm Sand & Espresso theme!");
+          setShowBanner(true);
+          loadSystemInfo();
+        }
+      });
+  };
+
+  const handleResetEmbed = () => {
+    if (!rawSettings) return;
+    fetch("/api/settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...rawSettings,
+        appEmbedActive: false
+      })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setBannerMsg("App Embed status reset successfully! Onboarding lock has been re-enabled for testing.");
           setShowBanner(true);
           loadSystemInfo();
         }
@@ -168,6 +189,21 @@ export default function AdminPanel() {
 
   return (
     <Page title="System Admin Panel">
+      {/* Page Intro Banner */}
+      <div className="page-intro-banner">
+        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+          <span style={{ fontSize: "24px" }}>🔧</span>
+          <div>
+            <h3 style={{ margin: 0, fontSize: "15px", fontWeight: "600", color: "var(--text-main)" }}>
+              Developer Diagnostics & Simulation Console
+            </h3>
+            <p style={{ margin: "4px 0 0 0", fontSize: "12.5px", color: "var(--text-muted)", lineHeight: "1.4" }}>
+              Test end-to-end webhook pricing checks, dispatch Nodemailer Ethereal simulation sandboxes, view active user database directories, and manage app billing plans.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {showBanner && (
         <div style={{ marginBottom: "15px" }}>
           <Banner title={bannerMsg} onDismiss={() => setShowBanner(false)} tone="info" />
@@ -359,6 +395,7 @@ export default function AdminPanel() {
               <InlineStack gap="300">
                 <Button onClick={handleResetSettings}>Reset Styles to Earthy Theme Default</Button>
                 <Button variant="secondary" onClick={loadSystemInfo}>Refresh System Log Data</Button>
+                <Button onClick={handleResetEmbed}>Reset App Embed Onboarding Status</Button>
               </InlineStack>
             </BlockStack>
           </Card>

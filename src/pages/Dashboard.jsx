@@ -28,6 +28,21 @@ export default function Dashboard() {
 
   return (
     <Page>
+      {/* Page Intro Banner */}
+      <div className="page-intro-banner">
+        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+          <span style={{ fontSize: "24px" }}>🏠</span>
+          <div>
+            <h3 style={{ margin: 0, fontSize: "15px", fontWeight: "600", color: "var(--text-main)" }}>
+              Merchant Dashboard Overview
+            </h3>
+            <p style={{ margin: "4px 0 0 0", fontSize: "12.5px", color: "var(--text-muted)", lineHeight: "1.4" }}>
+              Welcome! This is your primary control room. Track real-time statistics of wishlists generated, unique product interests, and checkouts attributed to wishlist email alert campaigns.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Title & Subtitle */}
       <div style={{ marginBottom: "20px" }}>
         <h1 style={{ margin: 0, fontSize: "24px", fontWeight: "700", color: "var(--text-main)" }}>

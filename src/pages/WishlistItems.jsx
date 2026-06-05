@@ -159,6 +159,21 @@ export default function WishlistItems() {
 
   return (
     <Page>
+      {/* Page Intro Banner */}
+      <div className="page-intro-banner">
+        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+          <span style={{ fontSize: "24px" }}>📋</span>
+          <div>
+            <h3 style={{ margin: 0, fontSize: "15px", fontWeight: "600", color: "var(--text-main)" }}>
+              Wishlist & Lead Management Database
+            </h3>
+            <p style={{ margin: "4px 0 0 0", fontSize: "12.5px", color: "var(--text-muted)", lineHeight: "1.4" }}>
+              Search, filter, and audit customer wishlist items. You can import legacy data lists from previous apps via CSV uploads, export your contacts list for marketing re-engagement, and see who unsubscribed from price drop notifications.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Dynamic Banner Status Notifier */}
       {showBanner && (
         <div style={{ marginBottom: "15px" }}>

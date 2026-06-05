@@ -55,6 +55,7 @@ model AppSettings {
   emailSubject   String   @default("An item in your wishlist has dropped in price!")
   emailGreeting  String   @default("Great news! We noticed a price drop on something you love.")
   activePlan     String   @default("Free")
+  appEmbedActive Boolean  @default(false)
 }
 
 // Unsubscriber model to respect opt-outs

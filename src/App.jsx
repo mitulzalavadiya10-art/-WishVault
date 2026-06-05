@@ -12,10 +12,14 @@ import Installation from "./pages/Installation.jsx";
 import Pricing from "./pages/Pricing.jsx";
 import LandingPage from "./pages/LandingPage.jsx";
 import AdminPanel from "./pages/AdminPanel.jsx";
+import Onboarding from "./pages/Onboarding.jsx";
 
 export default function App() {
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
   const [isEmbedded, setIsEmbedded] = useState(false);
+  const [appEmbedActive, setAppEmbedActive] = useState(false);
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
+  const [settingsData, setSettingsData] = useState(null);
 
   // Synchronize dynamic routing state and check if embedded in Shopify iframe
   useEffect(() => {
@@ -28,9 +32,52 @@ export default function App() {
       setCurrentPath(window.location.pathname);
     };
 
+    // Load AppSettings status
+    fetch("/api/settings")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data) {
+          setSettingsData(data);
+          setAppEmbedActive(data.appEmbedActive);
+        }
+        setSettingsLoaded(true);
+      })
+      .catch((err) => {
+        console.error("Error fetching settings:", err);
+        setSettingsLoaded(true);
+      });
+
     window.addEventListener("popstate", handleLocationChange);
     return () => window.removeEventListener("popstate", handleLocationChange);
   }, []);
+
+  // Handle successful theme app embed verification
+  const handleOnboardingVerify = () => {
+    return new Promise((resolve, reject) => {
+      fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...settingsData,
+          appEmbedActive: true
+        })
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success) {
+            setAppEmbedActive(true);
+            setSettingsData(data.settings);
+            resolve();
+          } else {
+            reject();
+          }
+        })
+        .catch((err) => {
+          console.error("Error updating onboarding status:", err);
+          reject(err);
+        });
+    });
+  };
 
   // Render correct page view based on path
   const renderContent = () => {
@@ -60,9 +107,23 @@ export default function App() {
     return <LandingPage />;
   }
 
+  // Show a loading state until settings are loaded
+  if (!settingsLoaded) {
+    return (
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh", fontFamily: "sans-serif", color: "var(--text-muted)" }}>
+        Loading settings...
+      </div>
+    );
+  }
+
   // Otherwise render the Polaris Embedded merchant dashboard view
   return (
     <AppProvider i18n={enTranslations}>
+      {/* If theme app embed is not enabled (and not on admin page), overlay the blocking onboarding modal */}
+      {!appEmbedActive && currentPath !== "/admin" && (
+        <Onboarding onVerify={handleOnboardingVerify} />
+      )}
+
       {/* Shopify App Bridge Sidebar Navigation Menu */}
       <s-app-nav>
         <s-link href="/" rel="home">Home</s-link>

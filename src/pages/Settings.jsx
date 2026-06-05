@@ -65,6 +65,21 @@ export default function Settings() {
 
   return (
     <Page title="Design & Customization">
+      {/* Page Intro Banner */}
+      <div className="page-intro-banner">
+        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+          <span style={{ fontSize: "24px" }}>🎨</span>
+          <div>
+            <h3 style={{ margin: 0, fontSize: "15px", fontWeight: "600", color: "var(--text-main)" }}>
+              Widget Customization & Alerts Designer
+            </h3>
+            <p style={{ margin: "4px 0 0 0", fontSize: "12.5px", color: "var(--text-muted)", lineHeight: "1.4" }}>
+              Tailor the look and feel of the "Add to Wishlist" buttons to blend with your storefront's brand guidelines. Configure custom email subject headers and template parameters for automated notifications.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {isSaved && (
         <div style={{ marginBottom: "15px" }}>
           <Banner title="Settings saved successfully!" tone="success" />

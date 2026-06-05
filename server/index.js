@@ -68,13 +68,13 @@ app.get("/api/settings", async (req, res) => {
 });
 
 app.post("/api/settings", async (req, res) => {
-  const { shop, primaryColor, secondaryColor, textColor, buttonStyle, buttonText, emailSubject, emailGreeting, activePlan } = req.body;
+  const { shop, primaryColor, secondaryColor, textColor, buttonStyle, buttonText, emailSubject, emailGreeting, activePlan, appEmbedActive } = req.body;
   const targetShop = shop || "default-store.myshopify.com";
   try {
     const settings = await prisma.appSettings.upsert({
       where: { shop: targetShop },
-      update: { primaryColor, secondaryColor, textColor, buttonStyle, buttonText, emailSubject, emailGreeting, activePlan },
-      create: { shop: targetShop, primaryColor, secondaryColor, textColor, buttonStyle, buttonText, emailSubject, emailGreeting, activePlan },
+      update: { primaryColor, secondaryColor, textColor, buttonStyle, buttonText, emailSubject, emailGreeting, activePlan, appEmbedActive },
+      create: { shop: targetShop, primaryColor, secondaryColor, textColor, buttonStyle, buttonText, emailSubject, emailGreeting, activePlan, appEmbedActive },
     });
     res.json({ success: true, settings });
   } catch (err) {
