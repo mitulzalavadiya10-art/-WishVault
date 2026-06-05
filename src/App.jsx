@@ -10,12 +10,19 @@ import Orders from "./pages/Orders.jsx";
 import Settings from "./pages/Settings.jsx";
 import Installation from "./pages/Installation.jsx";
 import Pricing from "./pages/Pricing.jsx";
+import LandingPage from "./pages/LandingPage.jsx";
 
 export default function App() {
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
+  const [isEmbedded, setIsEmbedded] = useState(false);
 
-  // Synchronize dynamic routing state with browser location
+  // Synchronize dynamic routing state and check if embedded in Shopify iframe
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const hasShop = params.has("shop") || params.has("host");
+    const inIframe = window.self !== window.top;
+    setIsEmbedded(hasShop || inIframe);
+
     const handleLocationChange = () => {
       setCurrentPath(window.location.pathname);
     };
@@ -45,6 +52,12 @@ export default function App() {
     }
   };
 
+  // If not embedded, render the public-facing Vercel landing page
+  if (!isEmbedded) {
+    return <LandingPage />;
+  }
+
+  // Otherwise render the Polaris Embedded merchant dashboard view
   return (
     <AppProvider i18n={enTranslations}>
       {/* Shopify App Bridge Sidebar Navigation Menu */}
