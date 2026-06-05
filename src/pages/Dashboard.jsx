@@ -1,199 +1,165 @@
 import React from "react";
-import { Page, Layout, Text, Button } from "@shopify/polaris";
+import { Page, Layout, Card, Text, BlockStack, InlineStack, Button } from "@shopify/polaris";
 
 export default function Dashboard() {
-  // Mock data for top items
-  const topItems = [
-    { id: 1, name: "Warm Linen Bedding Set", image: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=80&q=80", count: 48, price: "$129.00" },
-    { id: 2, name: "Minimalist Ceramic Vase", image: "https://images.unsplash.com/photo-1578500494198-246f612d3b3d?auto=format&fit=crop&w=80&q=80", count: 35, price: "$45.00" },
-    { id: 3, name: "Soy Wax Candle (Sandalwood)", image: "https://images.unsplash.com/photo-1603006905003-be475563bc59?auto=format&fit=crop&w=80&q=80", count: 29, price: "$24.00" },
-  ];
-
   return (
     <Page>
-      {/* Header Section */}
-      <div style={{ marginBottom: "2rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div>
-          <h1 style={{ margin: 0, fontSize: "28px", fontWeight: "700", color: "var(--primary)" }}>
-            Welcome to WishVault
-          </h1>
-          <p style={{ margin: "5px 0 0", color: "var(--text-muted)", fontSize: "14px" }}>
-            Here's how your wishlists and alerts are performing today.
-          </p>
-        </div>
-        <div style={{ display: "flex", gap: "10px" }}>
-          <Button variant="secondary">View Live Store</Button>
-          <Button variant="primary" style={{ backgroundColor: "var(--primary)", borderColor: "var(--primary)" }}>
-            Customize Widget
-          </Button>
-        </div>
+      {/* Title & Subtitle */}
+      <div style={{ marginBottom: "20px" }}>
+        <h1 style={{ margin: 0, fontSize: "24px", fontWeight: "700", color: "var(--text-main)" }}>
+          Hello
+        </h1>
+        <p style={{ margin: "5px 0 0", color: "var(--text-muted)", fontSize: "14px" }}>
+          It's so good to see you here.
+        </p>
       </div>
 
       <Layout>
-        {/* Setup Guide Banner */}
+        {/* Active app blocks & Setup Guide */}
         <Layout.Section>
-          <div className="card" style={{ padding: "1.75rem", borderLeft: "5px solid var(--primary)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-              <div style={{ flex: 1 }}>
-                <span style={{ 
-                  background: "var(--border-color)", 
-                  color: "var(--primary)", 
-                  padding: "4px 10px", 
-                  borderRadius: "20px", 
-                  fontSize: "11px", 
-                  fontWeight: "700",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px"
+          <Card>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <Text variant="headingMd" as="h2">
+                Active app blocks & Setup Guide
+              </Text>
+              <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                <button style={{
+                  background: "var(--bg-app)",
+                  border: "1px solid var(--border-color)",
+                  borderRadius: "20px",
+                  padding: "6px 14px",
+                  fontSize: "12px",
+                  fontWeight: "600",
+                  color: "var(--text-main)",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px"
                 }}>
-                  Quick Start Guide
-                </span>
-                <h3 style={{ margin: "10px 0 5px", fontSize: "18px", fontWeight: "600", color: "var(--text-main)" }}>
-                  Activate Wishlist Widget & Setup
-                </h3>
-                <p style={{ margin: "0 0 15px 0", color: "var(--text-muted)", fontSize: "13.5px" }}>
-                  Complete the setup to enable the floating wishlist button and price alert widgets on your online store.
-                </p>
-              </div>
-              <div style={{ color: "var(--primary)", fontWeight: "600", fontSize: "14px" }}>
-                1 / 4 Completed
+                  <span style={{ fontSize: "12px" }}>👁️</span> View details
+                </button>
+                <button style={{
+                  background: "none",
+                  border: "none",
+                  fontSize: "14px",
+                  color: "var(--text-muted)",
+                  cursor: "pointer",
+                  padding: "4px"
+                }}>
+                  ✕
+                </button>
               </div>
             </div>
 
-            {/* Custom Premium Progress Bar */}
-            <div style={{ width: "100%", background: "var(--border-color)", height: "8px", borderRadius: "10px", overflow: "hidden", marginBottom: "1.5rem" }}>
-              <div style={{ width: "25%", background: "var(--primary)", height: "8px", borderRadius: "10px", transition: "width 0.5s ease" }}></div>
+            <div style={{ marginTop: "10px", marginBottom: "15px" }}>
+              <Text as="p" tone="subdued" variant="bodySm">
+                0 / 4 completed
+              </Text>
             </div>
 
-            {/* Step list */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "15px" }}>
-              <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                <span style={{ width: "20px", height: "20px", borderRadius: "50%", background: "#4caf50", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px" }}>✓</span>
-                <span style={{ fontSize: "13px", color: "var(--text-main)", fontWeight: "500" }}>Enable App Embed</span>
-              </div>
-              <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                <span style={{ width: "20px", height: "20px", borderRadius: "50%", background: "var(--border-color)", color: "var(--text-muted)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px" }}>2</span>
-                <span style={{ fontSize: "13px", color: "var(--text-muted)" }}>Verify Button Position</span>
-              </div>
-              <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                <span style={{ width: "20px", height: "20px", borderRadius: "50%", background: "var(--border-color)", color: "var(--text-muted)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px" }}>3</span>
-                <span style={{ fontSize: "13px", color: "var(--text-muted)" }}>Customize Alert Template</span>
-              </div>
-              <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                <span style={{ width: "20px", height: "20px", borderRadius: "50%", background: "var(--border-color)", color: "var(--text-muted)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px" }}>4</span>
-                <span style={{ fontSize: "13px", color: "var(--text-muted)" }}>Test Price Drop Email</span>
-              </div>
+            {/* Custom progress bar */}
+            <div style={{ width: "100%", background: "var(--border-color)", height: "8px", borderRadius: "4px" }}>
+              <div style={{ width: "0%", background: "var(--primary)", height: "8px", borderRadius: "4px" }}></div>
             </div>
+          </Card>
+        </Layout.Section>
+
+        {/* Wishlist addition limits */}
+        <Layout.Section>
+          <Text variant="bodySm" as="p" tone="subdued">
+            0/ 100 Wishlist additions
+          </Text>
+          <div style={{ width: "100%", background: "var(--border-color)", height: "4px", borderRadius: "2px", marginTop: "5px" }}>
+            <div style={{ width: "0%", background: "var(--primary)", height: "4px", borderRadius: "2px" }}></div>
           </div>
         </Layout.Section>
 
-        {/* 8 Stats Metrics Grid (Styled with custom icons, clean sizes, premium cards) */}
+        {/* 8 Stats Metrics Grid */}
         <Layout.Section>
           <div style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
             gap: "20px",
             marginTop: "10px"
           }}>
             {[
-              { label: "Wishlist Page Views", value: "1,248", icon: "👁️", trend: "+12% this week" },
-              { label: "Customers with Wishlist", value: "384", icon: "👤", trend: "+8% this week" },
-              { label: "Total Wishlists Created", value: "412", icon: "✨", trend: "+15% this week" },
-              { label: "Unique Products Wishlisted", value: "87", icon: "📦", trend: "+4% this week" },
-              { label: "Added to Cart from Wishlist", value: "94", icon: "🛒", trend: "+20% this week" },
-              { label: "Orders from Wishlist", value: "32", icon: "🛍️", trend: "+18% this week" },
-              { label: "Average Order Value", value: "$114.50", icon: "💳", trend: "+2.4% vs last mo" },
-              { label: "Wishlist Revenue Generated", value: "$3,664.00", icon: "🤎", trend: "+14.8% vs last mo" }
+              { label: "Wishlist page views", value: "0", icon: "👁️" },
+              { label: "Customers with wishlist", value: "0", icon: "👤" },
+              { label: "Total wishlists", value: "0", icon: "♡" },
+              { label: "Unique products wishlisted", value: "0", icon: "🏷️" },
+              { label: "Added to cart from wishlist", value: "0", icon: "🛒" },
+              { label: "Orders from wishlist", value: "0", icon: "📥" },
+              { label: "Average Order Value", value: "$0.00", icon: "📈" },
+              { label: "Revenue from Wishlist", value: "$0.00", icon: "🪙" }
             ].map((stat, i) => (
-              <div key={i} className="card" style={{ padding: "1.5rem", position: "relative", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px" }}>
-                  <span style={{ fontSize: "13.5px", fontWeight: "600", color: "var(--text-muted)" }}>{stat.label}</span>
-                  <span style={{ fontSize: "20px", background: "var(--bg-app)", width: "36px", height: "36px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>{stat.icon}</span>
+              <div key={i} className="card" style={{ padding: "1.5rem", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+                  <span style={{ fontSize: "13px", fontWeight: "500", color: "var(--text-muted)" }}>{stat.label}</span>
+                  <span style={{ fontSize: "14px", color: "var(--text-muted)" }}>{stat.icon}</span>
                 </div>
-                <div>
-                  <div style={{ fontSize: "28px", fontWeight: "700", color: "var(--text-main)" }}>{stat.value}</div>
-                  <div style={{ fontSize: "11.5px", color: "#4caf50", fontWeight: "500", marginTop: "4px" }}>{stat.trend}</div>
+                <div style={{ fontSize: "24px", fontWeight: "700", color: "var(--text-main)" }}>
+                  {stat.value}
                 </div>
               </div>
             ))}
           </div>
         </Layout.Section>
 
-        {/* Top 10 Table & Wishlist Limit Warning */}
-        <Layout.Section variant="oneThird">
-          <div className="card" style={{ height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-            <div>
-              <h3 style={{ margin: "0 0 10px 0", fontSize: "17px", fontWeight: "600", color: "var(--text-main)" }}>Wishlist Usage Limits</h3>
-              <p style={{ margin: "0 0 20px 0", color: "var(--text-muted)", fontSize: "13px" }}>
-                Under your current Free Plan, you have 100 free wishlist additions per month.
-              </p>
-              
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13.5px", fontWeight: "600", marginBottom: "8px" }}>
-                <span>48 / 100 Additions</span>
-                <span style={{ color: "var(--primary)" }}>48% Used</span>
-              </div>
-              <div style={{ width: "100%", background: "var(--border-color)", height: "8px", borderRadius: "4px", overflow: "hidden", marginBottom: "25px" }}>
-                <div style={{ width: "48%", background: "var(--primary)", height: "8px", borderRadius: "4px" }}></div>
-              </div>
-            </div>
-
-            <div style={{ padding: "12px", background: "var(--bg-app)", borderRadius: "8px", border: "1px solid var(--border-color)" }}>
-              <div style={{ fontSize: "12.5px", fontWeight: "600", color: "var(--text-main)", marginBottom: "4px" }}>Need higher limits?</div>
-              <div style={{ fontSize: "11.5px", color: "var(--text-muted)", marginBottom: "10px" }}>Upgrade to Pro Vault for unlimited wishlists & advanced email alert flows.</div>
-              <Button size="slim" style={{ backgroundColor: "var(--primary)", color: "white", border: "none" }}>Upgrade Now</Button>
-            </div>
-          </div>
-        </Layout.Section>
-
+        {/* Top 10 items in public wishlists */}
         <Layout.Section>
-          <div className="card" style={{ padding: "1.75rem" }}>
-            <h3 style={{ margin: "0 0 15px 0", fontSize: "18px", fontWeight: "600", color: "var(--text-main)" }}>
-              Top Wishlisted Items in Your Store
-            </h3>
-            
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead>
-                  <tr style={{ borderBottom: "2px solid var(--border-color)" }}>
-                    <th style={{ padding: "12px 10px", textAlign: "left", fontSize: "12.5px", fontWeight: "600", color: "var(--text-muted)" }}>Product Details</th>
-                    <th style={{ padding: "12px 10px", textAlign: "center", fontSize: "12.5px", fontWeight: "600", color: "var(--text-muted)" }}>Price</th>
-                    <th style={{ padding: "12px 10px", textAlign: "right", fontSize: "12.5px", fontWeight: "600", color: "var(--text-muted)" }}>Wishlists Count</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {topItems.map((item, index) => (
-                    <tr key={item.id} style={{ borderBottom: index === topItems.length - 1 ? "none" : "1px solid var(--border-color)" }}>
-                      <td style={{ padding: "14px 10px", display: "flex", alignItems: "center", gap: "12px" }}>
-                        <img src={item.image} alt={item.name} style={{ width: "40px", height: "40px", borderRadius: "6px", objectFit: "cover" }} />
-                        <span style={{ fontWeight: "600", fontSize: "14px", color: "var(--text-main)" }}>{item.name}</span>
-                      </td>
-                      <td style={{ padding: "14px 10px", textAlign: "center", fontSize: "13.5px", color: "var(--text-muted)" }}>{item.price}</td>
-                      <td style={{ padding: "14px 10px", textAlign: "right", fontWeight: "700", fontSize: "14px", color: "var(--primary)" }}>{item.count} times</td>
+          <Card>
+            <BlockStack gap="300">
+              <Text variant="headingMd" as="h2">Top 10 items in public wishlists</Text>
+              
+              <div style={{ marginTop: "10px" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <thead>
+                    <tr style={{ borderBottom: "1px solid var(--border-color)", textAlign: "left" }}>
+                      <th style={{ padding: "8px 0", fontSize: "12px", color: "var(--text-muted)", fontWeight: "600" }}>Product</th>
+                      <th style={{ padding: "8px 0", textAlign: "right", fontSize: "12px", color: "var(--text-muted)", fontWeight: "600" }}>Wishlist Count</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                  </thead>
+                </table>
+                <div style={{
+                  marginTop: "10px",
+                  padding: "30px",
+                  textAlign: "center",
+                  background: "var(--bg-app)",
+                  border: "1px solid var(--border-color)",
+                  borderRadius: "8px",
+                  color: "var(--text-muted)",
+                  fontSize: "13px"
+                }}>
+                  No data found
+                </div>
+              </div>
+            </BlockStack>
+          </Card>
         </Layout.Section>
 
         {/* Support Grid Footer */}
         <Layout.Section>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "20px" }}>
-            <div className="card" style={{ display: "flex", gap: "15px", alignItems: "flex-start", padding: "1.5rem" }}>
-              <span style={{ fontSize: "24px" }}>📚</span>
-              <div>
-                <h4 style={{ margin: "0 0 5px 0", fontSize: "15px", fontWeight: "600", color: "var(--text-main)" }}>Help Center & Documentation</h4>
-                <p style={{ margin: "0 0 10px 0", fontSize: "12.5px", color: "var(--text-muted)" }}>Learn how to insert wishlist buttons, configure alert flows, and target customers.</p>
-                <a href="#docs" style={{ color: "var(--primary)", fontWeight: "600", fontSize: "13px", textDecoration: "none" }}>Read Setup Docs →</a>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+            <div className="card" style={{ padding: "1.25rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                <span style={{ fontSize: "18px", color: "var(--primary)" }}>📖</span>
+                <div>
+                  <div style={{ fontWeight: "600", fontSize: "13.5px", color: "var(--text-main)" }}>Help center documentation</div>
+                  <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>Start with our guides and tutorials.</div>
+                </div>
               </div>
+              <span style={{ fontSize: "14px", color: "var(--text-muted)" }}>🔍</span>
             </div>
-            <div className="card" style={{ display: "flex", gap: "15px", alignItems: "flex-start", padding: "1.5rem" }}>
-              <span style={{ fontSize: "24px" }}>💌</span>
-              <div>
-                <h4 style={{ margin: "0 0 5px 0", fontSize: "15px", fontWeight: "600", color: "var(--text-main)" }}>Contact Partner Support</h4>
-                <p style={{ margin: "0 0 10px 0", fontSize: "12.5px", color: "var(--text-muted)" }}>Have questions, feature requests, or custom integration needs? We are here for you.</p>
-                <a href="mailto:support@wishvault.co" style={{ color: "var(--primary)", fontWeight: "600", fontSize: "13px", textDecoration: "none" }}>Email Support →</a>
+
+            <div className="card" style={{ padding: "1.25rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                <span style={{ fontSize: "18px", color: "var(--primary)" }}>✉️</span>
+                <div>
+                  <div style={{ fontWeight: "600", fontSize: "13.5px", color: "var(--text-main)" }}>Contact support</div>
+                  <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>Got a question or need help? I'm here!</div>
+                </div>
               </div>
+              <span style={{ fontSize: "14px", color: "var(--text-muted)" }}>➔</span>
             </div>
           </div>
         </Layout.Section>
