@@ -1,26 +1,62 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Page, Layout, Card, Text, BlockStack, InlineStack, Button, TextField, Banner } from "@shopify/polaris";
 
 export default function Settings() {
   // Wishlist Button Configuration States
-  const [buttonStyle, setButtonStyle] = useState("pill-sand"); // pill-sand, bold-espresso, link-only, float-circle
+  const [buttonStyle, setButtonStyle] = useState("pill-sand");
   const [buttonText, setButtonText] = useState("Add to Wishlist");
-  const [primaryColor, setPrimaryColor] = useState("#655246"); // Muted Espresso Brown
-  const [secondaryColor, setSecondaryColor] = useState("#f7f4f0"); // Soft Warm Sand/Cream
-  const [textColor, setTextColor] = useState("#332b26"); // Espresso Dark Text
+  const [primaryColor, setPrimaryColor] = useState("#655246");
+  const [secondaryColor, setSecondaryColor] = useState("#f7f4f0");
+  const [textColor, setTextColor] = useState("#332b26");
   const [isSaved, setIsSaved] = useState(false);
 
   // Email Alert Configuration States
-  const [emailTemplate, setEmailTemplate] = useState("price-drop"); // price-drop, back-in-stock, reminder
+  const [emailTemplate, setEmailTemplate] = useState("price-drop");
   const [emailSubject, setEmailSubject] = useState("An item in your wishlist has dropped in price!");
   const [emailGreeting, setEmailGreeting] = useState("Great news! We noticed a price drop on something you love.");
 
+  // Fetch settings on mount
+  useEffect(() => {
+    fetch("/api/settings")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data) {
+          setButtonStyle(data.buttonStyle);
+          setButtonText(data.buttonText);
+          setPrimaryColor(data.primaryColor);
+          setSecondaryColor(data.secondaryColor);
+          setTextColor(data.textColor);
+          setEmailSubject(data.emailSubject);
+          setEmailGreeting(data.emailGreeting);
+        }
+      })
+      .catch((err) => console.error("Error loading settings:", err));
+  }, []);
+
   const handleSave = () => {
-    setIsSaved(true);
-    setTimeout(() => setIsSaved(false), 3000);
+    fetch("/api/settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        primaryColor,
+        secondaryColor,
+        textColor,
+        buttonStyle,
+        buttonText,
+        emailSubject,
+        emailGreeting
+      })
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          setIsSaved(true);
+          setTimeout(() => setIsSaved(false), 3000);
+        }
+      })
+      .catch((err) => console.error("Error saving settings:", err));
   };
 
-  // Pre-configured palette templates
   const applyPalette = (primary, secondary, text) => {
     setPrimaryColor(primary);
     setSecondaryColor(secondary);

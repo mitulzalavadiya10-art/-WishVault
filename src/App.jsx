@@ -11,6 +11,7 @@ import Settings from "./pages/Settings.jsx";
 import Installation from "./pages/Installation.jsx";
 import Pricing from "./pages/Pricing.jsx";
 import LandingPage from "./pages/LandingPage.jsx";
+import AdminPanel from "./pages/AdminPanel.jsx";
 
 export default function App() {
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
@@ -46,6 +47,8 @@ export default function App() {
         return <Installation />;
       case "/pricing":
         return <Pricing />;
+      case "/admin":
+        return <AdminPanel />;
       case "/":
       default:
         return <Dashboard />;
@@ -69,6 +72,7 @@ export default function App() {
         <s-link href="/settings">Settings</s-link>
         <s-link href="/installation">Installation</s-link>
         <s-link href="/pricing">Pricing Plan</s-link>
+        <s-link href="/admin">Admin Panel</s-link>
       </s-app-nav>
 
       <div style={{ padding: "10px 0" }}>

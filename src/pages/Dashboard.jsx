@@ -1,7 +1,31 @@
-import React from "react";
-import { Page, Layout, Card, Text, BlockStack, InlineStack, Button } from "@shopify/polaris";
+import React, { useEffect, useState } from "react";
+import { Page, Layout, Card, Text, BlockStack, Button } from "@shopify/polaris";
 
 export default function Dashboard() {
+  const [stats, setStats] = useState({
+    wishlistPageViews: 0,
+    customersWithWishlist: 0,
+    totalWishlists: 0,
+    uniqueProductsWishlisted: 0,
+    addedToCartFromWishlist: 0,
+    ordersFromWishlist: 0,
+    averageOrderValue: "$0.00",
+    revenueFromWishlist: "$0.00",
+    topItems: []
+  });
+
+  // Fetch live stats from API
+  useEffect(() => {
+    fetch("/api/stats")
+      .then(res => res.json())
+      .then(data => {
+        if (data) {
+          setStats(data);
+        }
+      })
+      .catch(err => console.error("Error loading dashboard stats:", err));
+  }, []);
+
   return (
     <Page>
       {/* Title & Subtitle */}
@@ -67,10 +91,15 @@ export default function Dashboard() {
         {/* Wishlist addition limits */}
         <Layout.Section>
           <Text variant="bodySm" as="p" tone="subdued">
-            0/ 100 Wishlist additions
+            {stats.totalWishlists}/ 100 Wishlist additions
           </Text>
           <div style={{ width: "100%", background: "var(--border-color)", height: "4px", borderRadius: "2px", marginTop: "5px" }}>
-            <div style={{ width: "0%", background: "var(--primary)", height: "4px", borderRadius: "2px" }}></div>
+            <div style={{
+              width: `${Math.min((stats.totalWishlists / 100) * 100, 100)}%`,
+              background: "var(--primary)",
+              height: "4px",
+              borderRadius: "2px"
+            }}></div>
           </div>
         </Layout.Section>
 
@@ -83,14 +112,14 @@ export default function Dashboard() {
             marginTop: "10px"
           }}>
             {[
-              { label: "Wishlist page views", value: "0", icon: "👁️" },
-              { label: "Customers with wishlist", value: "0", icon: "👤" },
-              { label: "Total wishlists", value: "0", icon: "♡" },
-              { label: "Unique products wishlisted", value: "0", icon: "🏷️" },
-              { label: "Added to cart from wishlist", value: "0", icon: "🛒" },
-              { label: "Orders from wishlist", value: "0", icon: "📥" },
-              { label: "Average Order Value", value: "$0.00", icon: "📈" },
-              { label: "Revenue from Wishlist", value: "$0.00", icon: "🪙" }
+              { label: "Wishlist page views", value: stats.wishlistPageViews, icon: "👁️" },
+              { label: "Customers with wishlist", value: stats.customersWithWishlist, icon: "👤" },
+              { label: "Total wishlists", value: stats.totalWishlists, icon: "♡" },
+              { label: "Unique products wishlisted", value: stats.uniqueProductsWishlisted, icon: "🏷️" },
+              { label: "Added to cart from wishlist", value: stats.addedToCartFromWishlist, icon: "🛒" },
+              { label: "Orders from wishlist", value: stats.ordersFromWishlist, icon: "📥" },
+              { label: "Average Order Value", value: stats.averageOrderValue, icon: "📈" },
+              { label: "Revenue from Wishlist", value: stats.revenueFromWishlist, icon: "🪙" }
             ].map((stat, i) => (
               <div key={i} className="card" style={{ padding: "1.5rem", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
@@ -119,19 +148,36 @@ export default function Dashboard() {
                       <th style={{ padding: "8px 0", textAlign: "right", fontSize: "12px", color: "var(--text-muted)", fontWeight: "600" }}>Wishlist Count</th>
                     </tr>
                   </thead>
+                  <tbody>
+                    {stats.topItems.length > 0 && stats.topItems.map((item, idx) => (
+                      <tr key={idx} style={{ borderBottom: "1px solid var(--border-color)" }}>
+                        <td style={{ padding: "10px 0", fontSize: "13.5px", color: "var(--text-main)", display: "flex", alignItems: "center", gap: "8px" }}>
+                          {item.image && (
+                            <img src={item.image} alt={item.name} style={{ width: "32px", height: "32px", borderRadius: "4px", objectFit: "cover" }} />
+                          )}
+                          <span>{item.name}</span>
+                        </td>
+                        <td style={{ padding: "10px 0", textAlign: "right", fontSize: "13.5px", fontWeight: "700", color: "var(--primary)" }}>
+                          {item.count}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
                 </table>
-                <div style={{
-                  marginTop: "10px",
-                  padding: "30px",
-                  textAlign: "center",
-                  background: "var(--bg-app)",
-                  border: "1px solid var(--border-color)",
-                  borderRadius: "8px",
-                  color: "var(--text-muted)",
-                  fontSize: "13px"
-                }}>
-                  No data found
-                </div>
+                {stats.topItems.length === 0 && (
+                  <div style={{
+                    marginTop: "10px",
+                    padding: "30px",
+                    textAlign: "center",
+                    background: "var(--bg-app)",
+                    border: "1px solid var(--border-color)",
+                    borderRadius: "8px",
+                    color: "var(--text-muted)",
+                    fontSize: "13px"
+                  }}>
+                    No data found
+                  </div>
+                )}
               </div>
             </BlockStack>
           </Card>

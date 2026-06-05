@@ -12,30 +12,66 @@ datasource db {
 
 // Shopify session storage model required for OAuth
 model Session {
-  id            String    @id
-  shop          String
-  state         String
-  isOnline      Boolean   @default(false)
-  scope         String?
-  expires       DateTime?
-  accessToken   String
-  userId        BigInt?
-  firstName     String?
-  lastName      String?
-  email         String?
-  accountOwner  Boolean   @default(false)
-  locale        String?
-  collaborator  Boolean?  @default(false)
-  emailVerified Boolean?  @default(false)
-  refreshToken  String?
+  id                  String    @id
+  shop                String
+  state               String
+  isOnline            Boolean   @default(false)
+  scope               String?
+  expires             DateTime?
+  accessToken         String
+  userId              BigInt?
+  firstName           String?
+  lastName            String?
+  email               String?
+  accountOwner        Boolean   @default(false)
+  locale              String?
+  collaborator        Boolean?  @default(false)
+  emailVerified       Boolean?  @default(false)
+  refreshToken        String?
   refreshTokenExpires DateTime?
 }
 
 // Wishlist model to save customer wishlists
 model Wishlist {
-  id         String   @id @default(uuid())
-  shop       String
-  customerId String
-  productId  String
-  createdAt  DateTime @default(now())
+  id            String   @id @default(uuid())
+  shop          String
+  customerId    String?
+  customerEmail String?
+  productId     String
+  productTitle  String?
+  productPrice  String?
+  productImage  String?
+  createdAt     DateTime @default(now())
+}
+
+// AppSettings model to persist customizer settings
+model AppSettings {
+  shop           String   @id
+  primaryColor   String   @default("#655246")
+  secondaryColor String   @default("#f7f4f0")
+  textColor      String   @default("#332b26")
+  buttonStyle    String   @default("pill-sand")
+  buttonText     String   @default("Add to Wishlist")
+  emailSubject   String   @default("An item in your wishlist has dropped in price!")
+  emailGreeting  String   @default("Great news! We noticed a price drop on something you love.")
+  activePlan     String   @default("Free")
+}
+
+// Unsubscriber model to respect opt-outs
+model Unsubscriber {
+  id        String   @id @default(uuid())
+  shop      String
+  email     String
+  createdAt DateTime @default(now())
+}
+
+// MailHistory model for analytics tracking
+model MailHistory {
+  id        String   @id @default(uuid())
+  shop      String
+  email     String
+  subject   String
+  type      String   // "Price Drop" or "Back in Stock"
+  sentAt    DateTime @default(now())
+  status    String   // "Sent" or "Failed"
 }
