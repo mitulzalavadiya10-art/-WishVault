@@ -27,7 +27,7 @@ export default function Dashboard() {
                 0 / 4 completed
               </Text>
               <div style={{ width: "100%", background: "#e1e3e5", height: "8px", borderRadius: "4px" }}>
-                <div style={{ width: "0%", background: "#008060", height: "8px", borderRadius: "4px" }}></div>
+                <div style={{ width: "0%", background: "var(--primary)", height: "8px", borderRadius: "4px" }}></div>
               </div>
             </BlockStack>
           </Card>
@@ -39,7 +39,7 @@ export default function Dashboard() {
             0/ 100 Wishlist additions
           </Text>
           <div style={{ width: "100%", background: "#e1e3e5", height: "4px", borderRadius: "2px", marginTop: "5px" }}>
-            <div style={{ width: "0%", background: "#008060", height: "4px", borderRadius: "2px" }}></div>
+            <div style={{ width: "0%", background: "var(--primary)", height: "4px", borderRadius: "2px" }}></div>
           </div>
         </Layout.Section>
 
