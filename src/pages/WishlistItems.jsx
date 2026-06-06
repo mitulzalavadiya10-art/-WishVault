@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Page, Card, Text, Banner } from "@shopify/polaris";
 
-export default function WishlistItems() {
+export default function WishlistItems({ shop }) {
+  const resolvedShop = shop || new URLSearchParams(window.location.search).get("shop") || "default-store.myshopify.com";
   const [activeTab, setActiveTab] = useState("product"); // product, user, unsubscriber, mail
   const [searchQuery, setSearchQuery] = useState("");
   const [filterBy, setFilterBy] = useState("all");
@@ -15,17 +16,17 @@ export default function WishlistItems() {
 
   // Fetch Database tables on mount and when tab changes
   const fetchData = () => {
-    fetch("/api/wishlist")
+    fetch(`/api/wishlist?shop=${encodeURIComponent(resolvedShop)}`)
       .then(res => res.json())
       .then(data => setWishlistItems(data || []))
       .catch(err => console.error("Error fetching wishlists:", err));
 
-    fetch("/api/unsubscriber")
+    fetch(`/api/unsubscriber?shop=${encodeURIComponent(resolvedShop)}`)
       .then(res => res.json())
       .then(data => setUnsubscriberList(data || []))
       .catch(err => console.error("Error fetching unsubscribers:", err));
 
-    fetch("/api/mail-history")
+    fetch(`/api/mail-history?shop=${encodeURIComponent(resolvedShop)}`)
       .then(res => res.json())
       .then(data => setMailHistory(data || []))
       .catch(err => console.error("Error fetching mail history:", err));

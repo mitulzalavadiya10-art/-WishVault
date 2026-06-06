@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Page, Layout, Card, Text, Button, BlockStack, InlineStack, Banner, TextField } from "@shopify/polaris";
 
-export default function AdminPanel() {
+export default function AdminPanel({ shop }) {
+  const resolvedShop = shop || new URLSearchParams(window.location.search).get("shop") || "default-store.myshopify.com";
   const [dbStatus, setDbStatus] = useState("Connected");
   const [totalSessions, setTotalSessions] = useState(1);
   const [rawWishlists, setRawWishlists] = useState([]);
@@ -15,17 +16,17 @@ export default function AdminPanel() {
 
   // Load backend details
   const loadSystemInfo = () => {
-    fetch("/api/wishlist")
+    fetch(`/api/wishlist?shop=${encodeURIComponent(resolvedShop)}`)
       .then(res => res.json())
       .then(data => setRawWishlists(data || []))
       .catch(() => setDbStatus("Disconnected"));
 
-    fetch("/api/settings")
+    fetch(`/api/settings?shop=${encodeURIComponent(resolvedShop)}`)
       .then(res => res.json())
       .then(data => setRawSettings(data))
       .catch(() => setDbStatus("Disconnected"));
 
-    fetch("/api/mail-history")
+    fetch(`/api/mail-history?shop=${encodeURIComponent(resolvedShop)}`)
       .then(res => res.json())
       .then(data => setMailHistory(data || []))
       .catch(() => {});
@@ -44,6 +45,7 @@ export default function AdminPanel() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...rawSettings,
+        shop: resolvedShop,
         activePlan: planName
       })
     })
@@ -63,6 +65,7 @@ export default function AdminPanel() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        shop: resolvedShop,
         customerId: "sim_101",
         customerEmail: simulatedEmail,
         productId: simulatedProduct,
@@ -154,6 +157,7 @@ export default function AdminPanel() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...rawSettings,
+        shop: resolvedShop,
         appEmbedActive: false
       })
     })

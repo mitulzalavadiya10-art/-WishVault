@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Page, Layout, Card, Text, BlockStack, Button } from "@shopify/polaris";
 
-export default function Dashboard() {
+export default function Dashboard({ shop }) {
+  const resolvedShop = shop || new URLSearchParams(window.location.search).get("shop") || "default-store.myshopify.com";
   const [stats, setStats] = useState({
     wishlistPageViews: 0,
     customersWithWishlist: 0,
@@ -16,7 +17,7 @@ export default function Dashboard() {
 
   // Fetch live stats from API
   useEffect(() => {
-    fetch("/api/stats")
+    fetch(`/api/stats?shop=${encodeURIComponent(resolvedShop)}`)
       .then(res => res.json())
       .then(data => {
         if (data) {
