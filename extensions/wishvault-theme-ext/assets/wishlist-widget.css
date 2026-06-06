@@ -1,0 +1,257 @@
+/* PDP Button styles */
+.wv-pdp-btn-container {
+  margin: 15px 0;
+  display: block;
+}
+
+.wv-pdp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.wv-pdp-btn.wv-pill {
+  padding: 10px 24px;
+  border-radius: 30px;
+  border: 1.5px solid var(--wv-primary);
+  background: var(--wv-secondary);
+  color: var(--wv-primary);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.wv-pdp-btn.wv-pill:hover {
+  background: var(--wv-primary);
+  color: #fff;
+}
+
+.wv-pdp-btn.wv-bold {
+  width: 100%;
+  padding: 12px 24px;
+  border-radius: 6px;
+  border: none;
+  background: var(--wv-primary);
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.wv-pdp-btn.wv-bold:hover {
+  opacity: 0.9;
+}
+
+.wv-pdp-btn.wv-link {
+  background: none;
+  border: none;
+  color: var(--wv-primary);
+  font-weight: 500;
+  font-size: 14px;
+  padding: 0;
+}
+
+.wv-pdp-btn.wv-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--wv-primary);
+  background: var(--wv-secondary);
+  color: var(--wv-primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.wv-pdp-btn.wv-circle:hover {
+  transform: translateY(-1px);
+}
+
+.wv-pdp-btn.wv-active .wv-icon {
+  color: #e25c5c;
+}
+
+/* PLP Heart styles */
+.wv-plp-heart {
+  position: absolute;
+  z-index: 10;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: #ffffff;
+  color: #332b26;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.wv-plp-heart:hover {
+  transform: scale(1.08);
+}
+
+.wv-plp-heart.wv-top-right {
+  top: 10px;
+  right: 10px;
+}
+
+.wv-plp-heart.wv-top-left {
+  top: 10px;
+  left: 10px;
+}
+
+.wv-plp-heart.wv-active .wv-icon {
+  color: #e25c5c;
+}
+
+/* Floating Launcher styles */
+#wv-floating-launcher {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  z-index: 9999;
+}
+
+.wv-launcher-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.wv-launcher-btn:hover {
+  transform: scale(1.05);
+}
+
+.wv-launcher-btn .wv-icon-heart {
+  font-size: 24px;
+}
+
+.wv-launcher-btn .wv-counter {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+
+/* Slide-out Sidebar Drawer styles */
+#wv-sidebar-drawer {
+  position: fixed;
+  top: 0;
+  right: -350px;
+  width: 320px;
+  height: 100vh;
+  background: #ffffff;
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+  z-index: 10000;
+  transition: right 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+  display: flex;
+  flex-direction: column;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+#wv-sidebar-drawer.wv-open {
+  right: 0;
+}
+
+.wv-drawer-header {
+  padding: 20px;
+  border-bottom: 1px solid #e1e3e5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.wv-drawer-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--wv-text);
+}
+
+.wv-close-drawer {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #888;
+}
+
+.wv-drawer-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.wv-drawer-items {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.wv-drawer-item {
+  display: flex;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f1f3f5;
+}
+
+.wv-drawer-item img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 4px;
+  background: #f1f3f5;
+}
+
+.wv-item-info {
+  flex: 1;
+}
+
+.wv-item-info h4 {
+  margin: 0 0 4px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--wv-text);
+}
+
+.wv-item-info p {
+  margin: 0 0 8px 0;
+  font-size: 12px;
+  color: #666;
+}
+
+.wv-remove-item {
+  background: none;
+  border: none;
+  color: #e25c5c;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 0;
+  font-weight: 500;
+}
+
+.wv-empty {
+  text-align: center;
+  padding: 40px 0;
+  color: #888;
+  font-size: 13px;
+}

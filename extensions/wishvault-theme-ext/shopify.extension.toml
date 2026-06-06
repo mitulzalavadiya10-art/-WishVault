@@ -1,0 +1,7 @@
+api_version = "2026-04"
+
+[[extensions]]
+name = "WishVault Core"
+handle = "wishvault-core"
+uid = "dd1cbf23-3c21-0c3a-5bd1-883e1965f0ed4ccef14e"
+type = "theme_app_extension"

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Page, Layout, Card, Text, BlockStack, InlineStack, Button, TextField, Banner } from "@shopify/polaris";
+import { Page, Layout, Card, Text, BlockStack, InlineStack, Button, TextField, Banner, Select } from "@shopify/polaris";
 
 export default function Settings() {
+  const [shop, setShop] = useState("default-store.myshopify.com");
+  
   // Wishlist Button Configuration States
   const [buttonStyle, setButtonStyle] = useState("pill-sand");
   const [buttonText, setButtonText] = useState("Add to Wishlist");
@@ -10,6 +12,12 @@ export default function Settings() {
   const [textColor, setTextColor] = useState("#332b26");
   const [isSaved, setIsSaved] = useState(false);
 
+  // Placement States
+  const [pdpPlacement, setPdpPlacement] = useState("below_cart");
+  const [plpPlacement, setPlpPlacement] = useState("top_right");
+  const [globalAccess, setGlobalAccess] = useState("floating_launcher");
+  const [wishlistView, setWishlistView] = useState("proxy_page");
+
   // Email Alert Configuration States
   const [emailTemplate, setEmailTemplate] = useState("price-drop");
   const [emailSubject, setEmailSubject] = useState("An item in your wishlist has dropped in price!");
@@ -17,7 +25,11 @@ export default function Settings() {
 
   // Fetch settings on mount
   useEffect(() => {
-    fetch("/api/settings")
+    const params = new URLSearchParams(window.location.search);
+    const shopParam = params.get("shop") || "default-store.myshopify.com";
+    setShop(shopParam);
+
+    fetch(`/api/settings?shop=${shopParam}`)
       .then((res) => res.json())
       .then((data) => {
         if (data) {
@@ -26,6 +38,10 @@ export default function Settings() {
           setPrimaryColor(data.primaryColor);
           setSecondaryColor(data.secondaryColor);
           setTextColor(data.textColor);
+          setPdpPlacement(data.pdpPlacement || "below_cart");
+          setPlpPlacement(data.plpPlacement || "top_right");
+          setGlobalAccess(data.globalAccess || "floating_launcher");
+          setWishlistView(data.wishlistView || "proxy_page");
           setEmailSubject(data.emailSubject);
           setEmailGreeting(data.emailGreeting);
         }
@@ -38,11 +54,16 @@ export default function Settings() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        shop,
         primaryColor,
         secondaryColor,
         textColor,
         buttonStyle,
         buttonText,
+        pdpPlacement,
+        plpPlacement,
+        globalAccess,
+        wishlistView,
         emailSubject,
         emailGreeting
       })
@@ -51,10 +72,16 @@ export default function Settings() {
       .then((data) => {
         if (data.success) {
           setIsSaved(true);
+          alert("Settings saved successfully!"); // Immediate popup confirmation toast
           setTimeout(() => setIsSaved(false), 3000);
+        } else {
+          alert("Failed to save settings: " + (data.error || "Unknown error"));
         }
       })
-      .catch((err) => console.error("Error saving settings:", err));
+      .catch((err) => {
+        console.error("Error saving settings:", err);
+        alert("Error saving settings: " + err.message);
+      });
   };
 
   const applyPalette = (primary, secondary, text) => {
@@ -310,6 +337,64 @@ export default function Settings() {
                   </div>
                 </div>
 
+              </BlockStack>
+            </Card>
+
+            {/* Wishlist Placement & Layout Settings */}
+            <Card>
+              <BlockStack gap="400">
+                <Text variant="headingMd" as="h2">Button Placement & Layout Settings</Text>
+                <Text as="p" tone="subdued">
+                  Choose where the "Add to Wishlist" buttons appear on your storefront and configure your global access points.
+                </Text>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginTop: "10px" }}>
+                  <Select
+                    label="Product Page (PDP) Placement"
+                    options={[
+                      { label: "Below Add to Cart (Recommended)", value: "below_cart" },
+                      { label: "Adjacent to Add to Cart", value: "adjacent_cart" },
+                      { label: "Below Product Price", value: "below_price" },
+                    ]}
+                    value={pdpPlacement}
+                    onChange={(val) => setPdpPlacement(val)}
+                  />
+
+                  <Select
+                    label="Collection Card (PLP) Placement"
+                    options={[
+                      { label: "Top-Right Image Overlay (Recommended)", value: "top_right" },
+                      { label: "Top-Left Image Overlay", value: "top_left" },
+                      { label: "Beside Title/Price", value: "below_title" },
+                      { label: "Hidden (Do not display)", value: "hidden" },
+                    ]}
+                    value={plpPlacement}
+                    onChange={(val) => setPlpPlacement(val)}
+                  />
+
+                  <Select
+                    label="Header & Global Access"
+                    options={[
+                      { label: "Floating Launcher Widget (Recommended)", value: "floating_launcher" },
+                      { label: "Header Utility Icon", value: "header_icon" },
+                      { label: "Both Launcher & Header Icon", value: "both" },
+                      { label: "None (Manual integration)", value: "none" },
+                    ]}
+                    value={globalAccess}
+                    onChange={(val) => setGlobalAccess(val)}
+                  />
+
+                  <Select
+                    label="Wishlist View Layout"
+                    options={[
+                      { label: "Dedicated Proxy Page (Recommended)", value: "proxy_page" },
+                      { label: "Slide-out Drawer", value: "drawer" },
+                      { label: "Quick Pop-up Modal", value: "modal" },
+                    ]}
+                    value={wishlistView}
+                    onChange={(val) => setWishlistView(val)}
+                  />
+                </div>
               </BlockStack>
             </Card>
 

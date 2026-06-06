@@ -24,3 +24,9 @@ embedded = false
 scopes = ""
 optional_scopes = [ ]
 use_legacy_install_flow = false
+
+[app_proxy]
+url = "https://example.com"
+subpath = "wishvault"
+prefix = "apps"
+

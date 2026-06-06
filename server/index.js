@@ -24,6 +24,14 @@ const shopify = shopifyApi({
 const app = express();
 app.use(cors());
 
+// Strip Shopify App Proxy path prefix if present
+app.use((req, res, next) => {
+  if (req.url.startsWith('/apps/wishvault')) {
+    req.url = req.url.replace('/apps/wishvault', '');
+  }
+  next();
+});
+
 // Configure body-parser to store raw body buffer on req.rawBody for webhook signature verification
 app.use(express.json({
   limit: "50mb",
@@ -68,13 +76,13 @@ app.get("/api/settings", async (req, res) => {
 });
 
 app.post("/api/settings", async (req, res) => {
-  const { shop, primaryColor, secondaryColor, textColor, buttonStyle, buttonText, emailSubject, emailGreeting, activePlan, appEmbedActive } = req.body;
+  const { shop, primaryColor, secondaryColor, textColor, buttonStyle, buttonText, pdpPlacement, plpPlacement, globalAccess, wishlistView, emailSubject, emailGreeting, activePlan, appEmbedActive } = req.body;
   const targetShop = shop || "default-store.myshopify.com";
   try {
     const settings = await prisma.appSettings.upsert({
       where: { shop: targetShop },
-      update: { primaryColor, secondaryColor, textColor, buttonStyle, buttonText, emailSubject, emailGreeting, activePlan, appEmbedActive },
-      create: { shop: targetShop, primaryColor, secondaryColor, textColor, buttonStyle, buttonText, emailSubject, emailGreeting, activePlan, appEmbedActive },
+      update: { primaryColor, secondaryColor, textColor, buttonStyle, buttonText, pdpPlacement, plpPlacement, globalAccess, wishlistView, emailSubject, emailGreeting, activePlan, appEmbedActive },
+      create: { shop: targetShop, primaryColor, secondaryColor, textColor, buttonStyle, buttonText, pdpPlacement, plpPlacement, globalAccess, wishlistView, emailSubject, emailGreeting, activePlan, appEmbedActive },
     });
     res.json({ success: true, settings });
   } catch (err) {

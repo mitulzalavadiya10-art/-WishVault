@@ -1,0 +1,28 @@
+{% schema %}
+{
+  "name": "WishVault Core Widget",
+  "target": "head",
+  "stylesheet": "wishlist-widget.css",
+  "javascript": "wishlist-widget.js",
+  "settings": [
+    {
+      "type": "color",
+      "id": "primary_color",
+      "label": "Primary Color",
+      "default": "#655246"
+    },
+    {
+      "type": "color",
+      "id": "secondary_color",
+      "label": "Secondary Color",
+      "default": "#f7f4f0"
+    }
+  ]
+}
+{% endschema %}
+
+<div id="wishvault-root" 
+     data-shop="{{ shop.permanent_domain }}" 
+     data-customer-id="{{ customer.id }}" 
+     data-customer-email="{{ customer.email }}">
+</div>
