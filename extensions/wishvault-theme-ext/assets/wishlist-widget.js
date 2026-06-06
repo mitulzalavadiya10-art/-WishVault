@@ -1,623 +1,522 @@
 (function () {
   'use strict';
 
-  // ─── Read customer data injected by Liquid ───────────────────────────────────
+  // ─── Customer data from Liquid ───────────────────────────────────────────────
   const root = document.getElementById('wishvault-root');
-  const shop = root?.dataset.shop || window.Shopify?.shop || window.location.hostname;
-  const customerId = root?.dataset.customerId || '';
-  const customerEmail = root?.dataset.customerEmail || '';
+  const shop = (root && root.dataset.shop) || (window.Shopify && window.Shopify.shop) || window.location.hostname;
+  const customerId    = (root && root.dataset.customerId)    || '';
+  const customerEmail = (root && root.dataset.customerEmail) || '';
   const apiHost = '/apps/wishvault';
 
-  // ─── Default settings (overwritten by backend fetch) ─────────────────────────
-  let settings = {
-    primaryColor: '#655246',
+  // ─── Defaults ────────────────────────────────────────────────────────────────
+  var settings = {
+    primaryColor:   '#655246',
     secondaryColor: '#f7f4f0',
-    textColor: '#332b26',
-    buttonStyle: 'pill-sand',
-    buttonText: 'Add to Wishlist',
-    pdpPlacement: 'below_cart',
-    plpPlacement: 'top_right',
-    globalAccess: 'both',
-    wishlistView: 'drawer',
+    textColor:      '#332b26',
+    buttonStyle:    'pill-sand',
+    buttonText:     'Add to Wishlist',
+    pdpPlacement:   'below_cart',
+    plpPlacement:   'top_right',
+    globalAccess:   'both',
+    wishlistView:   'drawer',
   };
 
-  let wishlistItems = [];
-  let drawerOpen = false;
+  var wishlistItems  = [];
+  var drawerOpen     = false;
+  var headerDone     = false;
+  var launcherDone   = false;
+  var drawerDone     = false;
+  var pdpDone        = false;
+  var observerActive = false;
 
-  // ─── Flags to prevent duplicate rendering ────────────────────────────────────
-  let headerRendered = false;
-  let launcherRendered = false;
-  let drawerRendered = false;
-  let pdpRendered = false;
-  let observerActive = false;
-
-  // ═══════════════════════════════════════════════════════════════════════════════
-  // INIT
-  // ═══════════════════════════════════════════════════════════════════════════════
-  function initWishVault() {
-    fetchSettings(() => {
+  // ─── INIT ────────────────────────────────────────────────────────────────────
+  function init() {
+    fetchSettings(function () {
       fetchWishlist();
       renderAll();
       startObserver();
     });
-
-    document.addEventListener('shopify:section:load', () => {
-      fetchSettings(() => renderAll());
+    document.addEventListener('shopify:section:load', function () {
+      resetFlags();
+      fetchSettings(function () { renderAll(); });
     });
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════════
-  // FETCH SETTINGS
-  // ═══════════════════════════════════════════════════════════════════════════════
-  function fetchSettings(callback) {
-    fetch(`${apiHost}/api/settings?shop=${encodeURIComponent(shop)}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data) {
-          settings.primaryColor   = data.primaryColor   || settings.primaryColor;
-          settings.secondaryColor = data.secondaryColor || settings.secondaryColor;
-          settings.textColor      = data.textColor      || settings.textColor;
-          settings.buttonStyle    = data.buttonStyle    || settings.buttonStyle;
-          settings.buttonText     = data.buttonText     || settings.buttonText;
-          settings.pdpPlacement   = data.pdpPlacement   || settings.pdpPlacement;
-          settings.plpPlacement   = data.plpPlacement   || settings.plpPlacement;
-          settings.globalAccess   = data.globalAccess   || settings.globalAccess;
-          settings.wishlistView   = data.wishlistView   || settings.wishlistView;
-          injectCSSVars();
+  function resetFlags() {
+    headerDone = launcherDone = drawerDone = pdpDone = false;
+  }
+
+  // ─── FETCH SETTINGS ──────────────────────────────────────────────────────────
+  function fetchSettings(cb) {
+    fetch(apiHost + '/api/settings?shop=' + encodeURIComponent(shop))
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d) {
+          settings.primaryColor   = d.primaryColor   || settings.primaryColor;
+          settings.secondaryColor = d.secondaryColor || settings.secondaryColor;
+          settings.textColor      = d.textColor      || settings.textColor;
+          settings.buttonStyle    = d.buttonStyle    || settings.buttonStyle;
+          settings.buttonText     = d.buttonText     || settings.buttonText;
+          settings.pdpPlacement   = d.pdpPlacement   || settings.pdpPlacement;
+          settings.plpPlacement   = d.plpPlacement   || settings.plpPlacement;
+          settings.globalAccess   = d.globalAccess   || settings.globalAccess;
+          settings.wishlistView   = d.wishlistView   || settings.wishlistView;
         }
-        if (callback) callback();
+        injectCSS();
+        if (cb) cb();
       })
-      .catch(() => {
-        injectCSSVars();
-        if (callback) callback();
-      });
+      .catch(function () { injectCSS(); if (cb) cb(); });
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════════
-  // FETCH WISHLIST ITEMS
-  // ═══════════════════════════════════════════════════════════════════════════════
+  // ─── FETCH WISHLIST ──────────────────────────────────────────────────────────
   function fetchWishlist() {
-    const params = new URLSearchParams({ shop });
-    if (customerEmail) params.set('customerEmail', customerEmail);
-    if (customerId)    params.set('customerId', customerId);
+    var url = apiHost + '/api/wishlist?shop=' + encodeURIComponent(shop);
+    if (customerEmail) url += '&customerEmail=' + encodeURIComponent(customerEmail);
+    else if (customerId) url += '&customerId=' + encodeURIComponent(customerId);
 
-    fetch(`${apiHost}/api/wishlist?${params}`)
-      .then(res => res.json())
-      .then(data => {
-        wishlistItems = data || [];
-        syncUIState();
-      })
-      .catch(err => console.error('WishVault: Error loading wishlist.', err));
+    fetch(url)
+      .then(function (r) { return r.json(); })
+      .then(function (d) { wishlistItems = d || []; syncUI(); })
+      .catch(function () {});
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════════
-  // CSS VARIABLES
-  // ═══════════════════════════════════════════════════════════════════════════════
-  function injectCSSVars() {
-    let style = document.getElementById('wv-dynamic-styles');
-    if (!style) {
-      style = document.createElement('style');
-      style.id = 'wv-dynamic-styles';
-      document.head.appendChild(style);
+  // ─── CSS VARS ────────────────────────────────────────────────────────────────
+  function injectCSS() {
+    var el = document.getElementById('wv-vars');
+    if (!el) {
+      el = document.createElement('style');
+      el.id = 'wv-vars';
+      document.head.appendChild(el);
     }
-    style.innerHTML = `
-      :root {
-        --wv-primary:   ${settings.primaryColor};
-        --wv-secondary: ${settings.secondaryColor};
-        --wv-text:      ${settings.textColor};
-      }
-    `;
+    el.textContent = ':root{--wv-p:' + settings.primaryColor + ';--wv-s:' + settings.secondaryColor + ';--wv-t:' + settings.textColor + ';}';
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════════
-  // RENDER ALL WIDGETS
-  // ═══════════════════════════════════════════════════════════════════════════════
+  // ─── RENDER ALL ──────────────────────────────────────────────────────────────
   function renderAll() {
-    renderDrawer();        // drawer must exist before header/launcher attach events to it
+    renderDrawer();
     renderGlobalAccess();
-    renderPDPButton();
-    renderPLPButtons();
-    syncUIState();
+    renderPDP();
+    renderPLP();
+    syncUI();
   }
 
-  // ─── Global Access: header icon + floating launcher ──────────────────────────
+  // ─── GLOBAL ACCESS (header + floating) ──────────────────────────────────────
   function renderGlobalAccess() {
-    const wantsLauncher = settings.globalAccess === 'floating_launcher' || settings.globalAccess === 'both';
-    const wantsHeader   = settings.globalAccess === 'header_icon'       || settings.globalAccess === 'both';
+    var g = settings.globalAccess;
+    if (g === 'floating_launcher' || g === 'both') renderLauncher();
+    else removeEl('wv-launcher');
 
-    if (wantsLauncher) renderFloatingLauncher();
-    else removeById('wv-floating-launcher');
-
-    if (wantsHeader) renderHeaderIcon();
-    else removeById('wv-header-link');
+    if (g === 'header_icon' || g === 'both') renderHeader();
+    else removeEl('wv-header-icon');
   }
 
-  // ─── Floating launcher (bottom-right fixed button) ───────────────────────────
-  function renderFloatingLauncher() {
-    if (launcherRendered || document.getElementById('wv-floating-launcher')) {
-      launcherRendered = true;
-      return;
-    }
-    const launcher = document.createElement('button');
-    launcher.id = 'wv-floating-launcher';
-    launcher.setAttribute('aria-label', 'Open Wishlist');
-    launcher.innerHTML = `
-      <span class="wv-launcher-heart">&#9829;</span>
-      <span class="wv-counter wv-launcher-counter">0</span>
-    `;
-    document.body.appendChild(launcher);
-    launcher.addEventListener('click', toggleDrawer);
-    launcherRendered = true;
+  // ─── FLOATING LAUNCHER ──────────────────────────────────────────────────────
+  function renderLauncher() {
+    if (launcherDone || document.getElementById('wv-launcher')) { launcherDone = true; return; }
+    var btn = document.createElement('button');
+    btn.id = 'wv-launcher';
+    btn.setAttribute('aria-label', 'Open Wishlist');
+    btn.innerHTML = '<span class="wv-lheart">&#9829;</span><span class="wv-counter wv-lcnt">0</span>';
+    document.body.appendChild(btn);
+    btn.addEventListener('click', toggleDrawer);
+    launcherDone = true;
   }
 
-  // ─── Header icon (next to cart icon) ─────────────────────────────────────────
-  function renderHeaderIcon() {
-    if (headerRendered || document.getElementById('wv-header-link')) {
-      headerRendered = true;
-      return;
-    }
+  // ─── HEADER ICON ────────────────────────────────────────────────────────────
+  // Wide selector list covering: Dawn, Debut, Savor, Sense, Refresh, Impulse,
+  // Minimal, Brooklyn, Narrative, Boundless, Supply, Venture + generic fallbacks
+  function renderHeader() {
+    if (headerDone || document.getElementById('wv-header-icon')) { headerDone = true; return; }
 
-    // Try multiple common cart icon selectors across Dawn, Debut, Refresh, Sense, etc.
-    const cartSelectors = [
-      'a[href="/cart"]',
-      'a[href*="/cart"]',
+    var cartSelectors = [
+      // Savor theme specific
+      'a.header-actions__action[href*="cart"]',
+      '.header-actions__action[href*="cart"]',
+      '.header-actions a[href*="cart"]',
+      // Dawn / most modern themes
+      '#cart-icon-bubble',
       '.header__icon--cart',
+      // Generic cart links
+      'a[href="/cart"]',
+      'a[href*="/cart"]:not([href*="product"]):not([href*="collection"])',
+      // Other theme classes
       '.site-header__cart',
       '.cart-link',
-      '#cart-icon-bubble',
+      '.nav__cart',
       '[data-icon="cart"]',
-      '.header-cart-btn',
+      '.cart__toggle',
+      '#CartToggle',
+      '.js-cart-toggle',
     ];
 
-    let cartEl = null;
-    for (const sel of cartSelectors) {
-      cartEl = document.querySelector(sel);
-      if (cartEl) break;
+    var cartEl = null;
+    for (var i = 0; i < cartSelectors.length; i++) {
+      try {
+        var found = document.querySelector(cartSelectors[i]);
+        if (found) { cartEl = found; break; }
+      } catch(e) {}
     }
 
-    if (!cartEl) return; // header not ready yet, observer will retry
+    if (!cartEl) return; // will retry via observer
 
-    const link = document.createElement('a');
-    link.id = 'wv-header-link';
-    link.href = '#wishvault-wishlist';
-    link.setAttribute('aria-label', 'My Wishlist');
-    link.className = 'wv-header-icon';
-    link.innerHTML = `
-      <svg class="wv-header-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" stroke="currentColor" stroke-width="1.5" fill="none"/>
-      </svg>
-      <span class="wv-counter wv-header-counter">0</span>
-    `;
+    var icon = document.createElement('a');
+    icon.id   = 'wv-header-icon';
+    icon.href = '#';
+    icon.setAttribute('aria-label', 'My Wishlist');
+    icon.innerHTML =
+      '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>' +
+      '<span class="wv-counter wv-hcnt">0</span>';
+    icon.addEventListener('click', function (e) { e.preventDefault(); toggleDrawer(); });
 
-    link.addEventListener('click', (e) => {
-      e.preventDefault();
-      toggleDrawer();
-    });
-
-    // Insert before cart icon
-    cartEl.parentNode.insertBefore(link, cartEl);
-    headerRendered = true;
+    // Insert BEFORE cart element
+    cartEl.parentNode.insertBefore(icon, cartEl);
+    headerDone = true;
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════════
-  // DRAWER (slide-out panel)
-  // ═══════════════════════════════════════════════════════════════════════════════
+  // ─── DRAWER ──────────────────────────────────────────────────────────────────
   function renderDrawer() {
-    if (drawerRendered || document.getElementById('wv-sidebar-drawer')) {
-      drawerRendered = true;
-      return;
-    }
+    if (drawerDone || document.getElementById('wv-drawer')) { drawerDone = true; return; }
 
-    // Backdrop overlay
-    const backdrop = document.createElement('div');
+    var backdrop = document.createElement('div');
     backdrop.id = 'wv-backdrop';
     backdrop.addEventListener('click', closeDrawer);
     document.body.appendChild(backdrop);
 
-    const drawer = document.createElement('div');
-    drawer.id = 'wv-sidebar-drawer';
-    drawer.setAttribute('role', 'dialog');
-    drawer.setAttribute('aria-label', 'Wishlist');
-    drawer.innerHTML = `
-      <div class="wv-drawer-header">
-        <div class="wv-drawer-title">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;margin-right:8px;color:var(--wv-primary)">
-            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" stroke="currentColor" stroke-width="1.5" fill="none"/>
-          </svg>
-          <span>My Wishlist</span>
-          <span class="wv-drawer-count">(<span class="wv-drawer-total">0</span> items)</span>
-        </div>
-        <button class="wv-close-drawer" aria-label="Close wishlist">&#10005;</button>
-      </div>
-      <div class="wv-drawer-content">
-        <div class="wv-drawer-items"></div>
-      </div>
-      <div class="wv-drawer-footer">
-        <a class="wv-view-all-btn" href="/pages/wishlist">View Full Wishlist</a>
-      </div>
-    `;
-    document.body.appendChild(drawer);
+    var d = document.createElement('div');
+    d.id = 'wv-drawer';
+    d.setAttribute('role', 'dialog');
+    d.setAttribute('aria-label', 'Wishlist');
+    d.innerHTML =
+      '<div class="wv-dhead">' +
+        '<div class="wv-dtitle">' +
+          '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>' +
+          '<span>My Wishlist</span>' +
+          '<span class="wv-dcount">(<span class="wv-dtotal">0</span> items)</span>' +
+        '</div>' +
+        '<button class="wv-dclose" aria-label="Close">&#10005;</button>' +
+      '</div>' +
+      '<div class="wv-dbody"><div class="wv-ditems"></div></div>' +
+      '<div class="wv-dfooter"><a class="wv-viewall" href="/apps/wishvault/wishlist">View Full Wishlist &rarr;</a></div>';
 
-    drawer.querySelector('.wv-close-drawer').addEventListener('click', closeDrawer);
-    drawerRendered = true;
+    document.body.appendChild(d);
+    d.querySelector('.wv-dclose').addEventListener('click', closeDrawer);
+    drawerDone = true;
   }
 
   function toggleDrawer() {
-    const drawer = document.getElementById('wv-sidebar-drawer');
-    const backdrop = document.getElementById('wv-backdrop');
-    if (!drawer) return;
+    var d = document.getElementById('wv-drawer');
+    var b = document.getElementById('wv-backdrop');
+    if (!d) return;
     drawerOpen = !drawerOpen;
-    drawer.classList.toggle('wv-open', drawerOpen);
-    if (backdrop) backdrop.classList.toggle('wv-open', drawerOpen);
+    d.classList.toggle('wv-open', drawerOpen);
+    if (b) b.classList.toggle('wv-open', drawerOpen);
     document.body.style.overflow = drawerOpen ? 'hidden' : '';
-    if (drawerOpen) renderDrawerItems();
+    if (drawerOpen) renderItems();
   }
 
   function closeDrawer() {
-    const drawer = document.getElementById('wv-sidebar-drawer');
-    const backdrop = document.getElementById('wv-backdrop');
     drawerOpen = false;
-    if (drawer) drawer.classList.remove('wv-open');
-    if (backdrop) backdrop.classList.remove('wv-open');
+    var d = document.getElementById('wv-drawer');
+    var b = document.getElementById('wv-backdrop');
+    if (d) d.classList.remove('wv-open');
+    if (b) b.classList.remove('wv-open');
     document.body.style.overflow = '';
   }
 
-  function renderDrawerItems() {
-    const container = document.querySelector('.wv-drawer-items');
-    const totalEl   = document.querySelector('.wv-drawer-total');
-    if (!container) return;
+  function renderItems() {
+    var c = document.querySelector('.wv-ditems');
+    var t = document.querySelector('.wv-dtotal');
+    if (!c) return;
+    if (t) t.textContent = wishlistItems.length;
 
-    if (totalEl) totalEl.textContent = wishlistItems.length;
-
-    if (wishlistItems.length === 0) {
-      container.innerHTML = `
-        <div class="wv-empty-state">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;color:#ccc;margin-bottom:12px">
-            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" stroke="currentColor" stroke-width="1.5" fill="none"/>
-          </svg>
-          <p>Your wishlist is empty</p>
-          <span>Save items you love and come back anytime.</span>
-        </div>`;
+    if (!wishlistItems.length) {
+      c.innerHTML =
+        '<div class="wv-empty">' +
+          '<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>' +
+          '<p>Your wishlist is empty</p>' +
+          '<span>Save items you love and come back anytime.</span>' +
+        '</div>';
       return;
     }
 
-    container.innerHTML = wishlistItems.map(item => `
-      <div class="wv-drawer-item" data-id="${item.id}">
-        <a href="/products/${item.productHandle || item.productId}" class="wv-item-image-link">
-          <img src="${item.productImage || 'https://cdn.shopify.com/s/files/1/0533/2089/files/placeholder-images-product-1_small.png'}"
-               alt="${escapeHtml(item.productTitle || '')}"
-               onerror="this.src='https://cdn.shopify.com/s/files/1/0533/2089/files/placeholder-images-product-1_small.png'">
-        </a>
-        <div class="wv-item-info">
-          <a class="wv-item-title" href="/products/${item.productHandle || item.productId}">${escapeHtml(item.productTitle || 'Product')}</a>
-          <p class="wv-item-price">${escapeHtml(item.productPrice || '')}</p>
-          <div class="wv-item-actions">
-            <a class="wv-add-to-cart-btn" href="/products/${item.productHandle || item.productId}">View Product</a>
-            <button class="wv-remove-item" data-item-id="${item.id}" aria-label="Remove from wishlist">&#10005;</button>
-          </div>
-        </div>
-      </div>
-    `).join('');
+    c.innerHTML = wishlistItems.map(function (item) {
+      var img = item.productImage || 'https://cdn.shopify.com/s/files/1/0533/2089/files/placeholder-images-product-1_small.png';
+      var title = esc(item.productTitle || 'Product');
+      var price = esc(item.productPrice || '');
+      var handle = item.productHandle || item.productId;
+      return (
+        '<div class="wv-item" data-id="' + item.id + '">' +
+          '<a href="/products/' + handle + '" class="wv-iimg"><img src="' + img + '" alt="' + title + '" loading="lazy" onerror="this.src=\'https://cdn.shopify.com/s/files/1/0533/2089/files/placeholder-images-product-1_small.png\'"></a>' +
+          '<div class="wv-iinfo">' +
+            '<a class="wv-ititle" href="/products/' + handle + '">' + title + '</a>' +
+            '<p class="wv-iprice">' + price + '</p>' +
+            '<div class="wv-ibtns">' +
+              '<a class="wv-ibuy" href="/products/' + handle + '">View Product</a>' +
+              '<button class="wv-iremove" data-iid="' + item.id + '" aria-label="Remove">&#10005;</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>'
+      );
+    }).join('');
 
-    container.querySelectorAll('.wv-remove-item').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const itemId = btn.getAttribute('data-item-id');
-        removeFromWishlist(itemId);
-      });
+    c.querySelectorAll('.wv-iremove').forEach(function (btn) {
+      btn.addEventListener('click', function () { removeItem(btn.getAttribute('data-iid')); });
     });
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════════
-  // PRODUCT PAGE BUTTON (PDP)
-  // ═══════════════════════════════════════════════════════════════════════════════
-  function renderPDPButton() {
-    if (pdpRendered) return;
-    if (!window.location.pathname.includes('/products/')) return;
+  // ─── PDP BUTTON ─────────────────────────────────────────────────────────────
+  function renderPDP() {
+    if (pdpDone) return;
+    var path = window.location.pathname;
+    if (!path.match(/\/products\//)) return;
 
-    const form = document.querySelector('form[action*="/cart/add"]');
-    if (!form) return;
-    if (form.querySelector('.wv-pdp-btn-container')) return;
+    // Wide form selectors — covers Savor, Dawn, Debut, etc.
+    var formSelectors = [
+      'form[action*="/cart/add"]',
+      'form[action="/cart/add"]',
+      '#product-form',
+      '.product-form',
+      '.product__form',
+      '[data-product-form]',
+      'form.shopify-product-form',
+    ];
 
-    // Get product ID — try multiple sources
-    const productId =
-      window.ShopifyAnalytics?.meta?.product?.id ||
-      document.querySelector('[name="id"]')?.value ||
-      document.querySelector('[data-product-id]')?.dataset.productId ||
+    var form = null;
+    for (var i = 0; i < formSelectors.length; i++) {
+      form = document.querySelector(formSelectors[i]);
+      if (form) break;
+    }
+    if (!form) return; // observer will retry
+
+    if (form.querySelector('.wv-pdp-wrap')) return; // already injected
+
+    // Get product ID from multiple sources
+    var productId =
+      (window.ShopifyAnalytics && window.ShopifyAnalytics.meta && window.ShopifyAnalytics.meta.product && window.ShopifyAnalytics.meta.product.id) ||
+      (window.__st && window.__st.pid) ||
+      (document.querySelector('[name="id"]') && document.querySelector('[name="id"]').value) ||
+      (document.querySelector('[data-product-id]') && document.querySelector('[data-product-id]').dataset.productId) ||
       '';
 
     if (!productId) return;
 
-    const title = document.querySelector('h1')?.textContent?.trim() || 'Product';
-    const price = document.querySelector('[data-price], .price__sale .price-item--sale, .price-item--regular, .price, .product__price')?.textContent?.trim() || '';
-    const image = document.querySelector('meta[property="og:image"]')?.content ||
-                  document.querySelector('.product__media img, .product-featured-media img')?.src || '';
+    var title = (document.querySelector('h1') && document.querySelector('h1').textContent.trim()) || 'Product';
+    var priceSelectors = [
+      '.price-item--sale', '.price-item--regular', '[data-price]',
+      '.product__price', '.price', '.product-price',
+    ];
+    var price = '';
+    for (var pi = 0; pi < priceSelectors.length; pi++) {
+      var pel = document.querySelector(priceSelectors[pi]);
+      if (pel) { price = pel.textContent.trim(); break; }
+    }
+    var image = (document.querySelector('meta[property="og:image"]') && document.querySelector('meta[property="og:image"]').content) ||
+                (document.querySelector('.product__media img, .product-featured-media img, .product-media img') &&
+                 document.querySelector('.product__media img, .product-featured-media img, .product-media img').src) || '';
 
-    const container = document.createElement('div');
-    container.className = 'wv-pdp-btn-container';
+    var active = inList(productId);
+    var btnClass = { 'pill-sand': 'wv-pill', 'bold-espresso': 'wv-bold', 'link-only': 'wv-link', 'float-circle': 'wv-circle' }[settings.buttonStyle] || 'wv-pill';
 
-    const isWishlisted = isInWishlist(productId);
-    const btnClass = {
-      'pill-sand':    'wv-pill',
-      'bold-espresso':'wv-bold',
-      'link-only':    'wv-link',
-      'float-circle': 'wv-circle',
-    }[settings.buttonStyle] || 'wv-pill';
+    var wrap = document.createElement('div');
+    wrap.className = 'wv-pdp-wrap';
+    wrap.innerHTML =
+      '<button class="wv-pdp ' + btnClass + (active ? ' wv-on' : '') + '" data-pid="' + productId + '" aria-label="' + (active ? 'Remove from wishlist' : 'Add to wishlist') + '">' +
+        '<span class="wv-ico">' + (active ? '&#9829;' : '&#9825;') + '</span>' +
+        (settings.buttonStyle !== 'float-circle' ? '<span class="wv-txt">' + (active ? 'Saved' : settings.buttonText) + '</span>' : '') +
+      '</button>';
 
-    container.innerHTML = `
-      <button class="wv-pdp-btn ${btnClass} ${isWishlisted ? 'wv-active' : ''}"
-              data-wv-product-id="${productId}"
-              aria-label="${isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}">
-        <span class="wv-icon">${isWishlisted ? '&#9829;' : '&#9825;'}</span>
-        ${settings.buttonStyle !== 'float-circle' ? `<span class="wv-text">${isWishlisted ? 'Saved to Wishlist' : settings.buttonText}</span>` : ''}
-      </button>
-    `;
-
-    // Placement logic
+    // Placement
     if (settings.pdpPlacement === 'adjacent_cart') {
-      const submitBtn = form.querySelector('[type="submit"], [name="add"]');
-      if (submitBtn) {
-        container.style.display = 'inline-block';
-        container.style.marginLeft = '10px';
-        container.style.verticalAlign = 'middle';
-        submitBtn.style.verticalAlign = 'middle';
-        submitBtn.parentNode.insertBefore(container, submitBtn.nextSibling);
-      } else {
-        form.appendChild(container);
-      }
+      var sub = form.querySelector('[type="submit"],[name="add"]');
+      if (sub) {
+        wrap.style.display = 'inline-block';
+        wrap.style.marginLeft = '10px';
+        sub.parentNode.insertBefore(wrap, sub.nextSibling);
+      } else form.appendChild(wrap);
     } else if (settings.pdpPlacement === 'below_price') {
-      const priceEl = document.querySelector('.price, [data-price], .product__price');
-      if (priceEl) {
-        priceEl.parentNode.insertBefore(container, priceEl.nextSibling);
-      } else {
-        form.appendChild(container);
-      }
+      var priceEl = document.querySelector('.price,[data-price],.product__price');
+      if (priceEl) priceEl.parentNode.insertBefore(wrap, priceEl.nextSibling);
+      else form.appendChild(wrap);
     } else {
-      // default: below_cart
-      form.appendChild(container);
+      form.appendChild(wrap); // below_cart (default)
     }
 
-    const btn = container.querySelector('.wv-pdp-btn');
-    btn.addEventListener('click', (e) => {
+    var btn = wrap.querySelector('.wv-pdp');
+    btn.addEventListener('click', function (e) {
       e.preventDefault();
-      toggleWishlist({ id: productId, title, price, image }, (added) => {
-        btn.classList.toggle('wv-active', added);
-        const iconEl = btn.querySelector('.wv-icon');
-        const textEl = btn.querySelector('.wv-text');
-        if (iconEl) iconEl.innerHTML = added ? '&#9829;' : '&#9825;';
-        if (textEl) textEl.textContent = added ? 'Saved to Wishlist' : settings.buttonText;
+      toggleItem({ id: productId, title: title, price: price, image: image }, function (added) {
+        btn.classList.toggle('wv-on', added);
+        var ico = btn.querySelector('.wv-ico');
+        var txt = btn.querySelector('.wv-txt');
+        if (ico) ico.innerHTML = added ? '&#9829;' : '&#9825;';
+        if (txt) txt.textContent = added ? 'Saved' : settings.buttonText;
         btn.setAttribute('aria-label', added ? 'Remove from wishlist' : 'Add to wishlist');
-        showToast(added ? 'Added to wishlist ♥' : 'Removed from wishlist');
+        toast(added ? '&#9829; Added to wishlist' : 'Removed from wishlist');
       });
     });
 
-    pdpRendered = true;
+    pdpDone = true;
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════════
-  // COLLECTION PAGE HEART BUTTONS (PLP)
-  // ═══════════════════════════════════════════════════════════════════════════════
-  function renderPLPButtons() {
+  // ─── PLP HEARTS ─────────────────────────────────────────────────────────────
+  function renderPLP() {
     if (settings.plpPlacement === 'hidden') return;
-    if (window.location.pathname.includes('/products/')) return;
+    var path = window.location.pathname;
+    if (path.match(/\/products\//)) return; // not on product page
 
-    const posClass = settings.plpPlacement === 'top_left' ? 'wv-top-left' : 'wv-top-right';
+    var pos = settings.plpPlacement === 'top_left' ? 'wv-tl' : 'wv-tr';
+    var links = document.querySelectorAll('a[href*="/products/"]');
+    var seen = new Set ? new Set() : { _s: [], has: function(v){ return this._s.indexOf(v) > -1; }, add: function(v){ this._s.push(v); } };
 
-    // Select all product card links
-    const productLinks = document.querySelectorAll('a[href*="/products/"]');
-    const seen = new Set();
-
-    productLinks.forEach(link => {
-      const card = link.closest('.grid__item, .product-card, .card, .product-item, .card-wrapper, [class*="product"]');
-      if (!card || seen.has(card) || card.querySelector('.wv-plp-heart')) return;
+    links.forEach(function (link) {
+      var card = link.closest('.grid__item,.product-card,.card,.product-item,.card-wrapper,.product-grid-item,[class*="product-card"],[class*="ProductCard"],[class*="product_card"]');
+      if (!card || seen.has(card) || card.querySelector('.wv-plp')) return;
       seen.add(card);
 
-      const href = link.getAttribute('href');
-      const handle = href.split('/products/')[1]?.split('?')[0]?.split('/')[0];
+      var href = link.getAttribute('href');
+      var handle = href.split('/products/')[1];
       if (!handle) return;
+      handle = handle.split('?')[0].split('/')[0];
 
-      const imgWrapper =
-        card.querySelector('.media, .card__inner, .card__media, .product-card__image-wrapper, .image-wrap') ||
-        card.querySelector('img')?.parentNode;
-      if (!imgWrapper) return;
+      // Image wrapper — wide selector
+      var imgWrap =
+        card.querySelector('.media,.card__inner,.card__media,.product-card__image-wrapper,.image-wrap,.product__image-wrapper,.product-image-wrapper,.card-product__image') ||
+        (card.querySelector('img') && card.querySelector('img').parentNode);
+      if (!imgWrap) return;
 
-      const isWishlisted = isInWishlist(handle);
-      const heart = document.createElement('button');
-      heart.className = `wv-plp-heart ${posClass} ${isWishlisted ? 'wv-active' : ''}`;
-      heart.setAttribute('data-wv-product-id', handle);
-      heart.setAttribute('aria-label', isWishlisted ? 'Remove from wishlist' : 'Add to wishlist');
-      heart.innerHTML = `<span class="wv-icon">${isWishlisted ? '&#9829;' : '&#9825;'}</span>`;
+      var active = inList(handle);
+      var heart = document.createElement('button');
+      heart.className = 'wv-plp ' + pos + (active ? ' wv-on' : '');
+      heart.setAttribute('data-pid', handle);
+      heart.setAttribute('aria-label', active ? 'Remove from wishlist' : 'Add to wishlist');
+      heart.innerHTML = '<span class="wv-ico">' + (active ? '&#9829;' : '&#9825;') + '</span>';
+      imgWrap.style.position = 'relative';
+      imgWrap.appendChild(heart);
 
-      imgWrapper.style.position = 'relative';
-      imgWrapper.appendChild(heart);
-
-      heart.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-
-        const title = card.querySelector('.card__heading, .product-card__title, .product-title, h2, h3')?.textContent?.trim() || 'Product';
-        const price = card.querySelector('.price-item, .product-card__price, .price, [class*="price"]')?.textContent?.trim() || '';
-        const image = card.querySelector('img')?.src || '';
-
-        toggleWishlist({ id: handle, title, price, image }, (added) => {
-          heart.classList.toggle('wv-active', added);
-          const iconEl = heart.querySelector('.wv-icon');
-          if (iconEl) iconEl.innerHTML = added ? '&#9829;' : '&#9825;';
+      heart.addEventListener('click', function (e) {
+        e.preventDefault(); e.stopPropagation();
+        var t = (card.querySelector('.card__heading,.product-card__title,.product-title,h2,h3') && card.querySelector('.card__heading,.product-card__title,.product-title,h2,h3').textContent.trim()) || 'Product';
+        var pr = (card.querySelector('.price-item,.price,[class*="price"]') && card.querySelector('.price-item,.price,[class*="price"]').textContent.trim()) || '';
+        var im = (card.querySelector('img') && card.querySelector('img').src) || '';
+        toggleItem({ id: handle, title: t, price: pr, image: im }, function (added) {
+          heart.classList.toggle('wv-on', added);
+          var ico = heart.querySelector('.wv-ico');
+          if (ico) ico.innerHTML = added ? '&#9829;' : '&#9825;';
           heart.setAttribute('aria-label', added ? 'Remove from wishlist' : 'Add to wishlist');
-          showToast(added ? 'Added to wishlist ♥' : 'Removed from wishlist');
+          toast(added ? '&#9829; Added to wishlist' : 'Removed from wishlist');
         });
       });
     });
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════════
-  // WISHLIST TOGGLE (ADD / REMOVE)
-  // ═══════════════════════════════════════════════════════════════════════════════
-  function isInWishlist(productId) {
-    return wishlistItems.some(i => String(i.productId) === String(productId));
+  // ─── TOGGLE (add / remove) ───────────────────────────────────────────────────
+  function inList(pid) {
+    return wishlistItems.some(function (i) { return String(i.productId) === String(pid); });
   }
 
-  function toggleWishlist(product, callback) {
-    const inList = isInWishlist(product.id);
-
-    if (inList) {
-      const item = wishlistItems.find(i => String(i.productId) === String(product.id));
+  function toggleItem(product, cb) {
+    if (inList(product.id)) {
+      var item = wishlistItems.filter(function (i) { return String(i.productId) === String(product.id); })[0];
       if (!item) return;
-
-      fetch(`${apiHost}/api/wishlist/delete`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: item.id }),
-      })
-        .then(r => r.json())
-        .then(data => {
-          if (data.success) {
-            wishlistItems = wishlistItems.filter(i => i.id !== item.id);
-            syncUIState();
-            if (callback) callback(false);
-          }
-        })
-        .catch(err => console.error('WishVault: Remove error', err));
+      fetch(apiHost + '/api/wishlist/delete', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: item.id })
+      }).then(function (r) { return r.json(); }).then(function (d) {
+        if (d.success) { wishlistItems = wishlistItems.filter(function (i) { return i.id !== item.id; }); syncUI(); if (cb) cb(false); }
+      }).catch(function () {});
     } else {
-      fetch(`${apiHost}/api/wishlist`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          shop,
-          customerId,
-          customerEmail,
-          productId: String(product.id),
-          productTitle: product.title,
-          productPrice: product.price,
-          productImage: product.image,
-        }),
-      })
-        .then(r => r.json())
-        .then(data => {
-          if (data.success) {
-            wishlistItems.push(data.item);
-            syncUIState();
-            if (callback) callback(true);
-          }
-        })
-        .catch(err => console.error('WishVault: Add error', err));
+      fetch(apiHost + '/api/wishlist', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ shop: shop, customerId: customerId, customerEmail: customerEmail, productId: String(product.id), productTitle: product.title, productPrice: product.price, productImage: product.image })
+      }).then(function (r) { return r.json(); }).then(function (d) {
+        if (d.success) { wishlistItems.push(d.item); syncUI(); if (cb) cb(true); }
+      }).catch(function () {});
     }
   }
 
-  function removeFromWishlist(itemId) {
-    fetch(`${apiHost}/api/wishlist/delete`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: itemId }),
-    })
-      .then(r => r.json())
-      .then(data => {
-        if (data.success) {
-          wishlistItems = wishlistItems.filter(i => i.id !== itemId);
-          syncUIState();
-          renderDrawerItems();
-        }
-      });
+  function removeItem(itemId) {
+    fetch(apiHost + '/api/wishlist/delete', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: itemId })
+    }).then(function (r) { return r.json(); }).then(function (d) {
+      if (d.success) { wishlistItems = wishlistItems.filter(function (i) { return i.id !== itemId; }); syncUI(); renderItems(); }
+    });
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════════
-  // SYNC UI STATE (counters, heart fill states)
-  // ═══════════════════════════════════════════════════════════════════════════════
-  function syncUIState() {
-    const count = wishlistItems.length;
-
-    // Update all counters
-    document.querySelectorAll('.wv-counter').forEach(el => {
+  // ─── SYNC UI (counters + heart states) ──────────────────────────────────────
+  function syncUI() {
+    var count = wishlistItems.length;
+    document.querySelectorAll('.wv-counter').forEach(function (el) {
       el.textContent = count;
-      el.style.display = count === 0 ? 'none' : 'flex';
+      el.style.display = count > 0 ? 'flex' : 'none';
+    });
+    var dt = document.querySelector('.wv-dtotal');
+    if (dt) dt.textContent = count;
+
+    document.querySelectorAll('[data-pid]').forEach(function (el) {
+      var pid = el.getAttribute('data-pid');
+      var on  = inList(pid);
+      el.classList.toggle('wv-on', on);
+      var ico = el.querySelector('.wv-ico');
+      if (ico) ico.innerHTML = on ? '&#9829;' : '&#9825;';
     });
 
-    if (document.querySelector('.wv-drawer-total')) {
-      document.querySelector('.wv-drawer-total').textContent = count;
-    }
-
-    // Update all product buttons heart states
-    document.querySelectorAll('[data-wv-product-id]').forEach(btn => {
-      const pid = btn.getAttribute('data-wv-product-id');
-      const active = isInWishlist(pid);
-      btn.classList.toggle('wv-active', active);
-      const icon = btn.querySelector('.wv-icon');
-      if (icon) icon.innerHTML = active ? '&#9829;' : '&#9825;';
-    });
-
-    if (drawerOpen) renderDrawerItems();
+    if (drawerOpen) renderItems();
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════════
-  // TOAST NOTIFICATION
-  // ═══════════════════════════════════════════════════════════════════════════════
-  function showToast(message) {
-    let toast = document.getElementById('wv-toast');
-    if (!toast) {
-      toast = document.createElement('div');
-      toast.id = 'wv-toast';
-      document.body.appendChild(toast);
+  // ─── TOAST ──────────────────────────────────────────────────────────────────
+  function toast(msg) {
+    var el = document.getElementById('wv-toast');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'wv-toast';
+      document.body.appendChild(el);
     }
-    toast.textContent = message;
-    toast.classList.add('wv-toast-show');
-    clearTimeout(toast._timer);
-    toast._timer = setTimeout(() => toast.classList.remove('wv-toast-show'), 2500);
+    el.innerHTML = msg;
+    el.classList.add('wv-show');
+    clearTimeout(el._t);
+    el._t = setTimeout(function () { el.classList.remove('wv-show'); }, 2600);
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════════
-  // MUTATION OBSERVER (smart — only re-renders PLP when new product cards appear)
-  // ═══════════════════════════════════════════════════════════════════════════════
+  // ─── OBSERVER (retry missing elements, handle infinite scroll) ───────────────
   function startObserver() {
     if (observerActive) return;
     observerActive = true;
-
-    let debounceTimer;
-    const observer = new MutationObserver((mutations) => {
-      // Only trigger if new nodes were added (avoid attribute changes causing loops)
-      const hasNewNodes = mutations.some(m => m.addedNodes.length > 0);
-      if (!hasNewNodes) return;
-
-      // Don't re-trigger for our own injected elements
-      const isOurEl = mutations.every(m =>
-        Array.from(m.addedNodes).every(n =>
-          n.id && (n.id.startsWith('wv-') || n.id === 'wishvault-root')
-        )
-      );
-      if (isOurEl) return;
-
-      clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => {
-        // Only retry things that may have missed on first render
-        if (!headerRendered) renderHeaderIcon();
-        if (!launcherRendered) renderFloatingLauncher();
-        if (!pdpRendered) renderPDPButton();
-        renderPLPButtons(); // PLP always re-scans for new cards (infinite scroll etc.)
-      }, 300);
+    var timer;
+    var obs = new MutationObserver(function (muts) {
+      var hasNew = muts.some(function (m) { return m.addedNodes.length > 0; });
+      if (!hasNew) return;
+      // Skip if only our own nodes added
+      var allOurs = muts.every(function (m) {
+        return Array.from(m.addedNodes).every(function (n) {
+          return n.id && n.id.indexOf('wv-') === 0;
+        });
+      });
+      if (allOurs) return;
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        if (!headerDone)  renderHeader();
+        if (!launcherDone) renderLauncher();
+        if (!pdpDone)     renderPDP();
+        renderPLP(); // always re-scan (infinite scroll)
+      }, 400);
     });
-
-    observer.observe(document.body, { childList: true, subtree: true });
+    obs.observe(document.body, { childList: true, subtree: true });
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════════
-  // HELPERS
-  // ═══════════════════════════════════════════════════════════════════════════════
-  function removeById(id) {
-    const el = document.getElementById(id);
-    if (el) el.remove();
+  // ─── HELPERS ────────────────────────────────────────────────────────────────
+  function removeEl(id) { var e = document.getElementById(id); if (e) e.remove(); }
+  function esc(s) {
+    return String(s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  function escapeHtml(str) {
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
-  }
-
-  // ─── Boot ─────────────────────────────────────────────────────────────────────
+  // ─── BOOT ───────────────────────────────────────────────────────────────────
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initWishVault);
+    document.addEventListener('DOMContentLoaded', init);
   } else {
-    initWishVault();
+    init();
   }
 
 })();
