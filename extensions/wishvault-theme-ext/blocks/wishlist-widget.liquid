@@ -24,5 +24,6 @@
 <div id="wishvault-root"
      data-shop="{{ shop.permanent_domain }}"
      data-customer-id="{{ customer.id | default: '' }}"
-     data-customer-email="{{ customer.email | default: '' }}">
+     data-customer-email="{{ customer.email | default: '' }}"
+     data-api-host="{{ app.metafields.wishvault.api_host | default: '' }}">
 </div>

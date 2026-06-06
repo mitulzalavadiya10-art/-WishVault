@@ -6,7 +6,14 @@
   const shop = (root && root.dataset.shop) || (window.Shopify && window.Shopify.shop) || window.location.hostname;
   const customerId    = (root && root.dataset.customerId)    || '';
   const customerEmail = (root && root.dataset.customerEmail) || '';
+
+  // Use App Proxy path. Shopify forwards /apps/wishvault/* → your backend.
+  // IMPORTANT: In shopify.app.toml [app_proxy] url must match your tunnel URL.
+  // During npm run dev, Shopify CLI auto-sets this if you run: shopify app deploy
   const apiHost = '/apps/wishvault';
+
+  // Fallback: if App Proxy returns 500/404, widget uses defaults silently.
+  // To fix: update [app_proxy] url in shopify.app.toml to your tunnel URL and redeploy.
 
   // ─── Defaults ────────────────────────────────────────────────────────────────
   var settings = {

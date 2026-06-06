@@ -22,7 +22,19 @@ const shopify = shopifyApi({
 });
 
 const app = express();
-app.use(cors());
+
+// CORS — allow Shopify storefront and app proxy requests
+app.use(cors({
+  origin: function(origin, callback) {
+    // Allow all myshopify.com origins, localhost, and no-origin (server-to-server)
+    if (!origin || origin.includes('myshopify.com') || origin.includes('shopify.com') || origin.includes('localhost')) {
+      callback(null, true);
+    } else {
+      callback(null, true); // allow all for now (storefront widget needs this)
+    }
+  },
+  credentials: true,
+}));
 
 // Strip Shopify App Proxy path prefix if present
 app.use((req, res, next) => {
