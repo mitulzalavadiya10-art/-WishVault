@@ -133,13 +133,14 @@
       'a.header-actions__action[href*="cart"]',
       '.header-actions__action[href*="cart"]',
       '.header-actions a[href*="cart"]',
-      // Dawn / most modern themes
+      '.header-actions__item a[href*="cart"]',
+      '.header__cart-link',
+      // Dawn / modern themes
       '#cart-icon-bubble',
       '.header__icon--cart',
-      // Generic cart links
+      // Generic
       'a[href="/cart"]',
-      'a[href*="/cart"]:not([href*="product"]):not([href*="collection"])',
-      // Other theme classes
+      'a[href*="/cart"]:not(nav a)',
       '.site-header__cart',
       '.cart-link',
       '.nav__cart',
@@ -147,6 +148,8 @@
       '.cart__toggle',
       '#CartToggle',
       '.js-cart-toggle',
+      '.cart-count-bubble',
+      '[data-cart-count]',
     ];
 
     var cartEl = null;
@@ -157,7 +160,18 @@
       } catch(e) {}
     }
 
-    if (!cartEl) return; // will retry via observer
+    // Last resort — find ANY header link (not nav menu links)
+    if (!cartEl) {
+      var header = document.querySelector('header, .site-header, .header, #shopify-section-header');
+      if (header) {
+        var allLinks = header.querySelectorAll('a');
+        allLinks.forEach(function(a) {
+          if (!cartEl && a.href && a.href.indexOf('/cart') > -1) cartEl = a;
+        });
+      }
+    }
+
+    if (!cartEl) return;
 
     var icon = document.createElement('a');
     icon.id   = 'wv-header-icon';
@@ -270,7 +284,25 @@
     var path = window.location.pathname;
     if (!path.match(/\/products\//)) return;
 
-    // Wide form selectors — covers Savor, Dawn, Debut, etc.
+    // ── Get product ID from every possible source ──
+    var productId =
+      (window.ShopifyAnalytics && window.ShopifyAnalytics.meta && window.ShopifyAnalytics.meta.product && window.ShopifyAnalytics.meta.product.id) ||
+      (window.__st && window.__st.pid) ||
+      (window.meta && window.meta.product && window.meta.product.id) ||
+      (document.querySelector('[name="id"]') && document.querySelector('[name="id"]').value) ||
+      (document.querySelector('[data-product-id]') && document.querySelector('[data-product-id]').getAttribute('data-product-id')) ||
+      (document.querySelector('[data-productid]') && document.querySelector('[data-productid]').getAttribute('data-productid')) ||
+      '';
+
+    // Fallback: try to extract product handle from URL and use it as ID
+    if (!productId) {
+      var m = path.match(/\/products\/([^/?]+)/);
+      if (m) productId = m[1]; // use handle as ID
+    }
+
+    if (!productId) return;
+
+    // ── Find injection point — form OR buy-buttons container OR product info ──
     var formSelectors = [
       'form[action*="/cart/add"]',
       'form[action="/cart/add"]',
@@ -279,42 +311,51 @@
       '.product__form',
       '[data-product-form]',
       'form.shopify-product-form',
+      '.product-info__form',
+      '.product__info-wrapper form',
     ];
-
     var form = null;
     for (var i = 0; i < formSelectors.length; i++) {
       form = document.querySelector(formSelectors[i]);
       if (form) break;
     }
-    if (!form) return; // observer will retry
 
-    if (form.querySelector('.wv-pdp-wrap')) return; // already injected
+    // If no form found, try to inject after buy-buttons or Add to Cart button
+    var injectAfter = null;
+    if (!form) {
+      var buySelectors = [
+        '.product-form__buttons',
+        '.buy-buttons',
+        '.product__buy-buttons',
+        '[data-add-to-cart]',
+        '.product-form__submit',
+        'button[name="add"]',
+        'button[type="submit"].btn--add-to-cart',
+      ];
+      for (var bi = 0; bi < buySelectors.length; bi++) {
+        var el = document.querySelector(buySelectors[bi]);
+        if (el) { injectAfter = el.closest('div') || el.parentNode; break; }
+      }
+      if (!injectAfter) return; // observer will retry
+    }
 
-    // Get product ID from multiple sources
-    var productId =
-      (window.ShopifyAnalytics && window.ShopifyAnalytics.meta && window.ShopifyAnalytics.meta.product && window.ShopifyAnalytics.meta.product.id) ||
-      (window.__st && window.__st.pid) ||
-      (document.querySelector('[name="id"]') && document.querySelector('[name="id"]').value) ||
-      (document.querySelector('[data-product-id]') && document.querySelector('[data-product-id]').dataset.productId) ||
-      '';
-
-    if (!productId) return;
+    var container = form || injectAfter;
+    if (container.querySelector('.wv-pdp-wrap')) return;
 
     var title = (document.querySelector('h1') && document.querySelector('h1').textContent.trim()) || 'Product';
-    var priceSelectors = [
-      '.price-item--sale', '.price-item--regular', '[data-price]',
-      '.product__price', '.price', '.product-price',
-    ];
+    var priceSelectors = ['.price-item--sale','.price-item--regular','[data-price]','.product__price','.price','.product-price','.price-block__price'];
     var price = '';
     for (var pi = 0; pi < priceSelectors.length; pi++) {
       var pel = document.querySelector(priceSelectors[pi]);
       if (pel) { price = pel.textContent.trim(); break; }
     }
-    var image = (document.querySelector('meta[property="og:image"]') && document.querySelector('meta[property="og:image"]').content) ||
-                (document.querySelector('.product__media img, .product-featured-media img, .product-media img') &&
-                 document.querySelector('.product__media img, .product-featured-media img, .product-media img').src) || '';
+    var image = (document.querySelector('meta[property="og:image"]') && document.querySelector('meta[property="og:image"]').content) || '';
+    if (!image) {
+      var imgEl = document.querySelector('.product__media img,.product-featured-media img,.product-media img,.product__photo img,figure.product-image img');
+      if (imgEl) image = imgEl.src;
+    }
 
-    var active = inList(productId);
+    var active   = inList(productId);
     var btnClass = { 'pill-sand': 'wv-pill', 'bold-espresso': 'wv-bold', 'link-only': 'wv-link', 'float-circle': 'wv-circle' }[settings.buttonStyle] || 'wv-pill';
 
     var wrap = document.createElement('div');
@@ -322,23 +363,23 @@
     wrap.innerHTML =
       '<button class="wv-pdp ' + btnClass + (active ? ' wv-on' : '') + '" data-pid="' + productId + '" aria-label="' + (active ? 'Remove from wishlist' : 'Add to wishlist') + '">' +
         '<span class="wv-ico">' + (active ? '&#9829;' : '&#9825;') + '</span>' +
-        (settings.buttonStyle !== 'float-circle' ? '<span class="wv-txt">' + (active ? 'Saved' : settings.buttonText) + '</span>' : '') +
+        (settings.buttonStyle !== 'float-circle' ? '<span class="wv-txt">' + (active ? 'Saved to Wishlist' : settings.buttonText) + '</span>' : '') +
       '</button>';
 
     // Placement
     if (settings.pdpPlacement === 'adjacent_cart') {
-      var sub = form.querySelector('[type="submit"],[name="add"]');
+      var sub = container.querySelector('[type="submit"],[name="add"]');
       if (sub) {
         wrap.style.display = 'inline-block';
         wrap.style.marginLeft = '10px';
         sub.parentNode.insertBefore(wrap, sub.nextSibling);
-      } else form.appendChild(wrap);
+      } else container.appendChild(wrap);
     } else if (settings.pdpPlacement === 'below_price') {
       var priceEl = document.querySelector('.price,[data-price],.product__price');
       if (priceEl) priceEl.parentNode.insertBefore(wrap, priceEl.nextSibling);
-      else form.appendChild(wrap);
+      else container.appendChild(wrap);
     } else {
-      form.appendChild(wrap); // below_cart (default)
+      container.appendChild(wrap); // below_cart default
     }
 
     var btn = wrap.querySelector('.wv-pdp');
@@ -349,7 +390,7 @@
         var ico = btn.querySelector('.wv-ico');
         var txt = btn.querySelector('.wv-txt');
         if (ico) ico.innerHTML = added ? '&#9829;' : '&#9825;';
-        if (txt) txt.textContent = added ? 'Saved' : settings.buttonText;
+        if (txt) txt.textContent = added ? 'Saved to Wishlist' : settings.buttonText;
         btn.setAttribute('aria-label', added ? 'Remove from wishlist' : 'Add to wishlist');
         toast(added ? '&#9829; Added to wishlist' : 'Removed from wishlist');
       });
